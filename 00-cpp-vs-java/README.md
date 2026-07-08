@@ -81,6 +81,56 @@ try (var reader = Files.newBufferedReader(path)) {
 } // reader.close() called automatically, even on exception
 ```
 
+## Compilation & tooling — no linker, no headers
+
+| | C++ | Java |
+|-|-----|------|
+| Compile | `g++ -c a.cpp b.cpp` per translation unit | `javac` compiles the whole graph it can see |
+| Link | separate link step (`ld`), produces one binary | no linker — `.class` files are loaded individually by the JVM at runtime |
+| Declare before use | forward declarations / headers | not needed — the compiler resolves symbols across `.java` files in the same compilation |
+| Dependency management | manual (`-I`, `-L`, vcpkg/conan) | Maven/Gradle resolve a dependency *graph* with transitive versions |
+| Static vs dynamic linking | a real, explicit choice | irrelevant — `.class` files are always loaded dynamically by a classloader (module 07), on demand, the first time a class is used |
+| ABI stability | fragile across compilers/versions | bytecode is the stable contract; a `.class` compiled years ago still runs on a new JVM |
+
+This is why Java has no `#include` guards, no "forward declare this class", and no
+one-definition-rule linker errors — the JVM resolves and loads classes lazily, one at a
+time, the first time each is actually referenced.
+
+## The diamond problem — why Java allows multiple interface inheritance but not multiple class inheritance
+
+C++ multiple inheritance can create a genuine diamond ambiguity (two base classes each
+define `foo()`, which one wins?) that requires virtual inheritance to resolve. Java
+sidesteps this for **state** by disallowing multiple class inheritance entirely, but
+still allows multiple interface inheritance because interfaces (mostly) don't carry
+state. If two interfaces provide *conflicting* `default` methods, Java refuses to guess —
+it's a **compile error** until the implementing class overrides the method itself:
+
+```java
+interface A { default String who() { return "A"; } }
+interface B { default String who() { return "B"; } }
+class C implements A, B {
+    public String who() { return A.super.who(); } // must resolve explicitly — no silent pick
+}
+```
+
+## Practice exercise — "port this C++ habit"
+
+Open [`Exercise.java`](Exercise.java). It's a small program with **five methods**, each
+written the way a C++ developer's first instinct would write it in Java — and each
+one either won't compile, compiles but misbehaves, or just isn't idiomatic. Your job,
+without looking at the answer key in the comments until you're done:
+
+1. Read each method's doc comment (the intended behavior).
+2. Fix the C++-ism so the method actually does what it says, using only concepts from
+   this module and module 01–02.
+3. Run it and confirm the `assert` in `main` passes for each.
+
+```bash
+java -ea 00-cpp-vs-java/Exercise.java
+```
+
+If you get stuck, the mental-model table above has every fix.
+
 ## Run the demo
 
 ```bash

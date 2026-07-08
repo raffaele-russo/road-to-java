@@ -38,6 +38,20 @@ cd 13-spring-basics && mvn test && mvn compile exec:java
 Work top to bottom. Read the module `README.md`, then run and tweak the examples.
 Don't just read — change values, break things, re-run.
 
+**Every module ends with a "Practice exercise"** pointing at an `Exercise.java` (modules
+00–11) or a stub test class (modules 12–13) with the solution stripped out — method
+bodies `throw new UnsupportedOperationException("TODO")` or `fail("TODO")`, with `assert`s
+(or `@Test`s) already written so you know exactly when you've got it right. Do the theory,
+then close the book and build it from scratch:
+
+```bash
+java -ea 02-oop/Exercise.java              # modules 00–11: run directly, assertions check you
+cd 12-testing && mvn test                   # modules 12–13: fill in the stub test class, mvn test
+```
+
+Module 09 additionally ends with an unanswered self-test question list (no code) — say
+the answer out loud before checking the matching module.
+
 ## Roadmap
 
 | # | Module | What you learn | Priority for interviews |

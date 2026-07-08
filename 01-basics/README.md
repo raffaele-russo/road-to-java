@@ -80,6 +80,95 @@ var count = 5;                       // int
 ```
 Like C++ `auto`, but **local variables only** — not fields, params, or return types.
 
+## Casting & numeric promotion
+
+- **Widening** (small → big, e.g. `int` → `long`, `float` → `double`) is implicit and safe.
+- **Narrowing** (big → small, e.g. `long` → `int`, `double` → `int`) needs an explicit cast
+  and can silently lose data — no compiler warning, unlike some C++ toolchains.
+- In any binary numeric expression, operands are **promoted** to the widest type present
+  (at least `int` — so `byte + byte` is an `int`, not a `byte`).
+
+```java
+int i = (int) 3.99;        // 3 — truncates toward zero, doesn't round
+byte b = (byte) 200;       // -56 — silent overflow, wraps around (two's complement)
+long l = 10;                // widening, no cast needed
+double d = l;                // widening, no cast needed
+
+byte b1 = 10, b2 = 20;
+// byte b3 = b1 + b2;       // compile error — b1 + b2 is promoted to int
+int sum = b1 + b2;          // fine
+```
+
+**Interview gotcha:** integer division truncates. `5 / 2 == 2`, not `2.5`. Force floating
+point by casting an operand: `5 / (double) 2 == 2.5`.
+
+## Bitwise & shift operators
+
+Java has all of C++'s bitwise operators, but shifts are defined precisely (no UB):
+
+```java
+int a = 5 & 3;   // AND -> 1
+int b = 5 | 2;   // OR  -> 7
+int c = 5 ^ 1;   // XOR -> 4
+int d = ~5;      // NOT -> -6 (two's complement)
+int e = 1 << 4;  // left shift  -> 16
+int f = -8 >> 1; // signed right shift, sign-extends -> -4
+int g = -8 >>> 1; // UNSIGNED right shift, zero-fills -> 2147483644 (no C++ equivalent operator)
+```
+
+`>>>` (unsigned/logical right shift) is Java-specific — C++ has no dedicated operator for
+it because C++ picks arithmetic vs. logical shift based on whether the type is signed.
+
+## Ternary operator & classic `switch`
+
+```java
+int max = (a > b) ? a : b;   // same as C++
+
+switch (day) {               // classic form — falls through without break
+    case MONDAY:
+    case TUESDAY:
+        System.out.println("early week");
+        break;                // forgetting this is a classic bug — falls into next case
+    default:
+        System.out.println("later");
+}
+```
+See module 08 for the modern arrow-form `switch` that fixes fall-through entirely.
+
+## String pool & interning (deeper than module 00)
+
+String literals are interned automatically into a shared pool; `new String(...)` forces a
+fresh heap object even if an identical literal already exists.
+
+```java
+String a = "hi";
+String b = "hi";
+a == b;                       // true — same pooled literal
+
+String c = new String("hi");
+a == c;                       // false — c is a distinct heap object
+a == c.intern();              // true — intern() looks up (or adds to) the pool
+```
+**Interview one-liner:** the pool exists because strings are immutable, so sharing is
+always safe — this is also why `String` is the textbook example for why immutability
+enables safe sharing without defensive copies.
+
+## Practice exercise — from scratch
+
+Open [`Exercise.java`](Exercise.java). Four methods, `String`/`char[]`/control-flow only
+(no `Collections` — that's module 03), each throwing `UnsupportedOperationException("TODO")`.
+Implement each and get every `assert` in `main` to pass:
+
+1. `isPalindrome(String s)` — case-insensitive, ignore non-alphanumeric characters.
+2. `reverseWords(String s)` — `"the sky is blue"` → `"blue is sky the"`, using only
+   `char[]`/`StringBuilder`, not `String.split` + `Collections.reverse`.
+3. `sumDigits(int n)` — sum of the decimal digits of `n` (handle negatives).
+4. `runLengthEncode(String s)` — `"aaabbc"` → `"a3b2c1"`.
+
+```bash
+java -ea 01-basics/Exercise.java
+```
+
 ## Run
 
 ```bash

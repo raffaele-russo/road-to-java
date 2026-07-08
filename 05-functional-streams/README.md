@@ -80,6 +80,67 @@ list.stream().mapToInt(Integer::intValue).average();
 `stream().parallel()` splits across the common ForkJoinPool. Only helps for large,
 CPU-bound, stateless, side-effect-free work. Easy to misuse — measure first.
 
+## Composing functions & predicates
+
+`Function`/`Predicate` aren't just single lambdas — they compose, which is a favorite
+"show me you know the API beyond the basics" interview probe:
+
+```java
+Function<Integer, Integer> times2 = x -> x * 2;
+Function<Integer, Integer> plus3  = x -> x + 3;
+times2.andThen(plus3).apply(5);   // (5*2)+3  = 13 — times2 runs first
+times2.compose(plus3).apply(5);   // (5+3)*2  = 16 — plus3 runs first
+
+Predicate<String> isLong  = s -> s.length() > 5;
+Predicate<String> hasA    = s -> s.contains("a");
+isLong.and(hasA).test("banana");   // true — both must hold
+isLong.negate().test("hi");        // true
+```
+
+## `Comparator` — chaining and reversing
+
+```java
+Comparator<Person> byAge = Comparator.comparingInt(Person::age);
+list.sort(byAge.thenComparing(Person::name));     // tie-break by name
+list.sort(byAge.reversed());                       // oldest first
+list.sort(Comparator.comparing(Person::name, Comparator.reverseOrder())); // reverse alpha
+```
+
+## `Stream.iterate` / `Stream.generate` — building a stream from nothing
+
+```java
+Stream.iterate(1, n -> n * 2).limit(5).toList();          // [1, 2, 4, 8, 16] — infinite, must limit
+Stream.iterate(1, n -> n < 100, n -> n * 2).toList();      // bounded form (Java 9+) — no limit() needed
+Stream.generate(Math::random).limit(3).toList();           // supplier-based, no state between calls
+```
+
+## Short-circuiting terminal operations
+
+`anyMatch`, `allMatch`, `noneMatch`, `findFirst`, `findAny`, and `limit` stop processing
+as soon as the answer is known — they don't necessarily traverse the whole source.
+
+```java
+boolean hasNegative = hugeList.stream().anyMatch(x -> x < 0);  // stops at the first match
+Optional<Integer> first = hugeList.stream().filter(x -> x > 100).findFirst(); // stops early
+```
+
+## `Collectors.teeing` (Java 12+) — two collectors, one pass
+
+```java
+var result = list.stream().collect(Collectors.teeing(
+    Collectors.summingInt(Integer::intValue),
+    Collectors.counting(),
+    (sum, count) -> sum / (double) count   // combine both results — a single-pass average
+));
+```
+
+## `Collectors.summarizingInt`/`averagingInt`/etc. — statistics without a manual reduce
+
+```java
+IntSummaryStatistics stats = employees.stream().collect(Collectors.summarizingInt(Employee::salary));
+stats.getMin(); stats.getMax(); stats.getAverage(); stats.getSum(); stats.getCount();
+```
+
 ## Optional — no more null
 
 `Optional<T>` models "maybe a value" and is the idiomatic return for "might not find one"
@@ -93,6 +154,24 @@ User required = u.orElseThrow(() -> new NotFoundException(id));
 ```
 **Don't**: call `.get()` without checking, use it for fields, or return `null` from an
 `Optional`-typed method.
+
+## Practice exercise — from scratch
+
+Open [`Exercise.java`](Exercise.java). A fixed `List<Employee>` record list is given.
+Implement four analysis methods, each with a **one-line stream pipeline** (no manual
+loops):
+
+1. `averageSalaryByDept(List<Employee>)` → `Map<String, Double>` — `groupingBy` +
+   `averagingDouble`.
+2. `highestPaidPerDept(List<Employee>)` → `Map<String, Employee>` — `groupingBy` +
+   a `Collectors.maxBy` downstream (unwrap the `Optional`).
+3. `topNByPay(List<Employee>, int n)` → `List<Employee>` — sort descending, take `n`.
+4. `deptNamesSorted(List<Employee>)` → `String` — distinct department names, sorted,
+   joined with `", "`.
+
+```bash
+java -ea 05-functional-streams/Exercise.java
+```
 
 ## Run
 

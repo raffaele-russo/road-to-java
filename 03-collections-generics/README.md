@@ -55,6 +55,16 @@ counts.computeIfAbsent("k", key -> new ArrayList<>()).add(x); // multimap patter
 counts.getOrDefault("x", 0);
 ```
 
+**Overload gotcha:** `List<Integer>` has both `remove(int index)` and `remove(Object o)`.
+An `int` argument always binds to the `index` overload — to remove the *value* `1`
+(not index `1`), box it first.
+
+```java
+List<Integer> nums = new ArrayList<>(List.of(5, 1, 9));
+nums.remove(1);              // removes INDEX 1 (the value 1) -> [5, 9] here, coincidentally right
+nums.remove(Integer.valueOf(9)); // removes the VALUE 9 by boxing -> forces the Object overload
+```
+
 **Interview favorite:** frequency counting with `merge`, grouping with
 `computeIfAbsent`. These replace verbose "check if key exists then..." code.
 
@@ -94,6 +104,92 @@ void fill(List<? super Integer> sink) { sink.add(1); } // I only write
 - Overloading `f(List<String>)` and `f(List<Integer>)` — same erasure, won't compile.
 - Can't create generic arrays: `new T[10]` → use `(T[]) new Object[10]` or `ArrayList`.
 
+## Iterator & the only safe way to remove during iteration
+
+```java
+Iterator<Integer> it = list.iterator();
+while (it.hasNext()) {
+    int v = it.next();
+    if (v % 2 == 0) it.remove();   // the ONLY safe removal during iteration
+}
+```
+Removing from the collection directly (`list.remove(v)`) while a for-each loop iterates
+it throws `ConcurrentModificationException` (see the fail-fast note in module 09).
+`ListIterator` extends `Iterator` with `hasPrevious`/`previous`/`set`/`add` — two-way
+traversal and in-place replacement, only available on `List`.
+
+## `Collections` and `Arrays` utility classes
+
+Static-method toolkits — the closest Java gets to C++'s `<algorithm>` free functions:
+
+```java
+Collections.sort(list);
+Collections.sort(list, Comparator.reverseOrder());
+Collections.reverse(list);
+Collections.max(list); Collections.min(list);
+Collections.unmodifiableList(list);       // read-only VIEW — backing list can still mutate
+Collections.synchronizedList(list);       // legacy coarse-grained thread safety (module 06 has better options)
+Collections.emptyList(); Collections.singletonList(x);
+
+int[] arr = {5, 3, 1};
+Arrays.sort(arr);
+Arrays.toString(arr);                     // arrays don't override toString() themselves
+Arrays.asList(1, 2, 3);                   // fixed-SIZE list backed by the array — no add/remove
+List<Integer> copy = new ArrayList<>(Arrays.asList(1, 2, 3)); // decouple into a resizable list
+```
+
+## `NavigableMap`/`NavigableSet` — the methods that justify choosing `Tree*`
+
+If you reach for `TreeMap`/`TreeSet` in an interview, know these — they're the whole
+point of paying O(log n) instead of O(1):
+
+```java
+TreeMap<Integer, String> m = new TreeMap<>();
+m.put(10, "a"); m.put(20, "b"); m.put(30, "c");
+
+m.floorKey(25);     // 20 — greatest key <= 25
+m.ceilingKey(25);   // 30 — smallest key >= 25
+m.higherKey(20);    // 30 — strictly greater than 20
+m.lowerKey(20);     // 10 — strictly less than 20
+m.firstKey(); m.lastKey();
+m.headMap(20);      // view of keys < 20
+m.tailMap(20, true); // view of keys >= 20 (inclusive flag)
+```
+
+## `EnumMap` / `EnumSet` — when the key type is an enum
+
+Array-backed under the hood, so faster and more memory-efficient than `HashMap`/`HashSet`
+for enum keys, and iterate in the enum's declaration order.
+
+```java
+enum Day { MON, TUE, WED }
+EnumMap<Day, String> schedule = new EnumMap<>(Day.class);
+EnumSet<Day> weekdays = EnumSet.of(Day.MON, Day.TUE);
+```
+
+## Raw types — why they still exist and why to avoid them
+
+A generic type used without its type argument (`List` instead of `List<String>`) compiles
+(for backward compatibility with pre-Java-5 code) but loses all compile-time type checking
+and produces "unchecked" warnings.
+
+```java
+List raw = new ArrayList();      // raw type — avoid in new code
+raw.add("a");
+raw.add(42);                     // compiles! no type safety at all
+for (Object o : raw) { }         // you're back to casting everything yourself
+```
+
+## Generic methods with multiple bounds
+
+```java
+static <T extends Comparable<T> & Cloneable> T pick(T a, T b) {  // T must satisfy BOTH
+    return a.compareTo(b) >= 0 ? a : b;
+}
+```
+At most one **class** bound, but any number of **interface** bounds; the class (if any)
+must come first.
+
 ## Comparable vs Comparator
 
 ```java
@@ -101,6 +197,20 @@ list.sort(Comparator.comparingInt(String::length)
                      .thenComparing(Comparator.naturalOrder()));
 // Comparable<T>: natural ordering, implemented by the class (compareTo)
 // Comparator<T>: external ordering, passed in
+```
+
+## Practice exercise — from scratch
+
+Open [`Exercise.java`](Exercise.java). Two classic interview builds:
+
+1. `MultiMap<K, V>` — a generic wrapper around `Map<K, List<V>>` with `put`/`get`/`size`,
+   built with `computeIfAbsent` (no manual null-checking).
+2. `LruCache<K, V>` — a fixed-capacity least-recently-used cache. Extend `LinkedHashMap`
+   in access-order mode and override `removeEldestEntry` (the idiom named in module 09's
+   `HashMap` Q&A) rather than hand-rolling a doubly-linked list.
+
+```bash
+java -ea 03-collections-generics/Exercise.java
 ```
 
 ## Run

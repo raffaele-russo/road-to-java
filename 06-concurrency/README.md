@@ -88,11 +88,96 @@ try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 }
 ```
 
+## Thread lifecycle states
+
+`Thread.State`: `NEW` (created, not started) → `RUNNABLE` (running or ready to run — the
+JVM doesn't distinguish "running" from "ready", that's the OS scheduler's job) →
+`BLOCKED` (waiting on a monitor lock) / `WAITING` (indefinite, e.g. `Object.wait()` with
+no timeout, or `join()`) / `TIMED_WAITING` (`sleep(ms)`, timed `wait`/`join`) →
+`TERMINATED` (run completed or threw). Know these names — "what state is a thread in
+while blocked on `synchronized`?" is a common quick-check question (`BLOCKED`).
+
+## `Callable` vs `Runnable`
+
+```java
+Runnable r = () -> System.out.println("no result, no checked exception");
+Callable<Integer> c = () -> { return 42; };   // can return a value AND throw a checked exception
+
+ExecutorService pool = Executors.newFixedThreadPool(2);
+Future<Integer> f = pool.submit(c);           // submit(Runnable) also works, Future<?> result is null
+```
+
+## Shutting down an `ExecutorService` correctly
+
+```java
+pool.shutdown();                              // stop accepting new tasks, let queued ones finish
+if (!pool.awaitTermination(5, TimeUnit.SECONDS)) {
+    pool.shutdownNow();                       // interrupt running tasks, cancel queued ones
+}
+```
+`shutdown()` is graceful; `shutdownNow()` interrupts. Forgetting to shut down a pool at
+all is a classic resource leak — non-daemon pool threads keep the JVM alive.
+
+## `ThreadLocal` — per-thread state without synchronization
+
+Gives each thread its own independent copy of a variable — useful for things like a
+per-request context or a non-thread-safe object (e.g. `SimpleDateFormat`) you don't want
+to synchronize on.
+
+```java
+private static final ThreadLocal<SimpleDateFormat> FORMAT =
+    ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
+FORMAT.get().format(new Date());     // each thread gets its own formatter instance
+```
+**Leak warning:** in a pooled-thread environment (executors, servlet containers), call
+`.remove()` when done — the pool reuses the thread, so a forgotten `ThreadLocal` value
+outlives the logical task and can leak memory or leak data between requests.
+
+## Producer-consumer with `BlockingQueue`
+
+The idiomatic way to hand work between threads without manual `wait`/`notify`:
+
+```java
+BlockingQueue<Integer> queue = new ArrayBlockingQueue<>(10);
+// producer
+queue.put(item);              // blocks if the queue is full
+// consumer
+int item = queue.take();      // blocks if the queue is empty
+```
+
+## Deadlock vs livelock vs starvation
+
+- **Deadlock**: threads block each other forever, each holding a resource the other needs.
+- **Livelock**: threads keep changing state in response to each other but make no
+  progress (e.g. both politely "yield" to avoid a collision, forever).
+- **Starvation**: a thread never gets CPU time or a lock because others are always
+  prioritized (e.g. an unfair lock, or lower-priority threads never scheduled).
+
 ## Interview one-liners
 - `start()` vs `run()`: `start()` spawns a thread; `run()` runs on the caller.
 - Why `synchronized` over `volatile`: volatile gives visibility, not atomicity.
 - `wait/notify` must be called while holding the object's monitor, in a loop guarding the condition.
 - Prefer higher-level utilities (executors, concurrent collections, atomics) over raw `synchronized`/`wait`.
+
+## Practice exercise — from scratch
+
+Open [`Exercise.java`](Exercise.java). Deterministic (no timing-dependent asserts —
+everything synchronizes via `join`/`BlockingQueue` so it's reliable to run repeatedly):
+
+1. `raceyIncrement(int threads, int incrementsPerThread)` — spins up threads that all
+   `count++` a **shared, non-atomic** `int` with no synchronization, joins them, and
+   returns the final count. Just run it (it's already implemented) and see it's usually
+   *wrong* — this demonstrates the race, it's not something to "fix" in place.
+2. `safeIncrement(int threads, int incrementsPerThread)` — TODO: same shape as above, but
+   using `AtomicInteger` so the result is always exactly `threads * incrementsPerThread`.
+3. `sumViaQueue(int producers, int itemsPerProducer)` — TODO: spin up `producers` threads
+   that each `put` the numbers `1..itemsPerProducer` onto a shared `BlockingQueue<Integer>`,
+   plus one consumer thread that `take`s until it has seen
+   `producers * itemsPerProducer` items and sums them. Join everything, return the sum.
+
+```bash
+java -ea 06-concurrency/Exercise.java
+```
 
 ## Run
 

@@ -272,6 +272,38 @@ for (Integer i : safe) {
 }
 ```
 
+**Q: What's a raw type, and why avoid it?**
+A generic type used without its type argument (`List` instead of `List<String>`). It
+compiles, for backward compatibility, but loses all compile-time type checking.
+
+```java
+List raw = new ArrayList();
+raw.add("a");
+raw.add(42);          // compiles! no type safety — this is exactly what generics prevent
+```
+
+**Q: What do `NavigableMap`/`NavigableSet` add over `TreeMap`/`TreeSet`?**
+Relative-position lookups: `floorKey`/`ceilingKey`/`higherKey`/`lowerKey`, plus
+`headMap`/`tailMap` range views — the actual reason to pay `TreeMap`'s O(log n) instead
+of `HashMap`'s O(1).
+
+```java
+TreeMap<Integer, String> m = new TreeMap<>(Map.of(10, "a", 20, "b", 30, "c"));
+m.floorKey(25);     // 20 — greatest key <= 25
+m.ceilingKey(25);   // 30 — smallest key >= 25
+```
+
+**Q: What are sequenced collections (Java 21)?**
+`SequencedCollection`/`SequencedSet`/`SequencedMap` give a uniform `getFirst()`/
+`getLast()`/`addFirst()`/`addLast()`/`reversed()` API across `List`, `LinkedHashSet`,
+`LinkedHashMap`, and `ArrayDeque` — before this, each had its own ad-hoc way (or none).
+
+```java
+List<Integer> list = new ArrayList<>(List.of(1, 2, 3));
+list.getFirst();     // 1 — instead of list.get(0)
+list.reversed();     // [3, 2, 1] — a VIEW, not a copy
+```
+
 ## Exceptions
 
 **Q: Checked vs unchecked?**
@@ -297,6 +329,30 @@ try (var in = new FileInputStream("a.txt");
      var out = new FileOutputStream("b.txt")) {
     in.transferTo(out);
 }   // out.close() runs, then in.close() — reverse declaration order, guaranteed even on exception
+```
+
+**Q: What's wrong with `return` inside a `finally` block?**
+It silently discards whatever the `try`/`catch` was about to return or throw — a classic
+"what does this print" trap.
+
+```java
+static int f() {
+    try { return 1; } finally { return 2; }  // f() returns 2 — the 1 is silently lost
+}
+```
+
+**Q: What are suppressed exceptions?**
+If both a try-with-resources body *and* `close()` throw, the `close()` exception isn't
+lost — it's attached to the primary one via `addSuppressed`, retrievable with
+`getSuppressed()` (pre-Java 7, it would silently mask the real exception instead).
+
+```java
+try (AutoCloseable r = () -> { throw new IllegalStateException("close failed"); }) {
+    throw new RuntimeException("body failed");
+} catch (Exception e) {
+    e.getMessage();       // "body failed"
+    e.getSuppressed();    // [IllegalStateException: close failed]
+}
 ```
 
 ## Functional programming & streams
@@ -484,6 +540,33 @@ try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 }   // 100k platform threads would exhaust the OS; 100k virtual threads is routine
 ```
 
+**Q: `Callable` vs `Runnable`?**
+`Runnable.run()` returns nothing and can't throw a checked exception. `Callable<V>.call()`
+returns a value and can throw a checked exception — submit it to an `ExecutorService` and
+get a `Future<V>` back.
+
+```java
+Future<Integer> f = pool.submit(() -> 21 + 21);   // Callable<Integer> via lambda
+f.get();   // 42, blocks until done
+```
+
+**Q: How do you shut down an `ExecutorService` correctly?**
+`shutdown()` first (graceful — stop accepting new tasks, finish queued ones), then
+`awaitTermination(timeout, unit)`, falling back to `shutdownNow()` (interrupts running
+tasks) if it doesn't finish in time. Forgetting to shut down at all leaks non-daemon
+threads that keep the JVM alive.
+
+**Q: What is `ThreadLocal` for, and what's the gotcha?**
+Gives each thread its own independent copy of a variable — no synchronization needed.
+Gotcha: in a pooled-thread environment (executors, servlets), the pool reuses threads,
+so a forgotten value outlives its logical task — call `.remove()` when done, or leak
+memory/leak data across requests.
+
+**Q: Deadlock vs livelock vs starvation?**
+Deadlock: threads block each other forever, each holding what the other needs. Livelock:
+threads keep changing state in response to each other but make no real progress. Starvation:
+a thread never gets scheduled/never gets the lock because others are always prioritized.
+
 ## JVM & memory
 
 **Q: Stack vs heap?**
@@ -534,6 +617,23 @@ JVM runs bytecode. JRE = JVM + core libs. JDK = JRE + compiler/tools (`javac`, `
 JDK = JRE + javac, jar, javadoc, jdb            (what you install to develop)
 JRE = JVM + core class libraries (java.lang, java.util, ...)   (what you need to run)
 JVM = the bytecode interpreter/JIT itself
+```
+
+**Q: `StackOverflowError` vs `OutOfMemoryError`?**
+`StackOverflowError`: a thread's fixed-size call stack is exhausted — almost always
+uncontrolled recursion. `OutOfMemoryError`: the heap/metaspace can't satisfy an allocation
+even after a full GC. Both are `Error`, not `Exception` — technically catchable, rarely
+worth catching.
+
+**Q: What are the class-loading phases, in order?**
+Loading (find bytecode, create the `Class` object) → Linking (Verify bytecode safety,
+Prepare/zero static fields, Resolve symbolic references) → Initialization (run `static`
+initializers, exactly once, on first active use — not on mere reference).
+
+```java
+class Lazy { static { System.out.println("init"); } }
+Lazy.class.getName();   // does NOT trigger initialization — just reflection metadata
+new Lazy();               // NOW it initializes, exactly once, ever
 ```
 
 ## Modern Java (11 → 21)
@@ -991,3 +1091,33 @@ Optional<User> user = repo.findById(id);            // Optional over raw null
 class Car { private final Engine engine; }           // composition over inheritance
 names.stream().map(String::toUpperCase).toList();    // declarative, not a manual for-loop
 ```
+
+## Practice — answer these yourself, out loud, before checking
+
+No answers given here on purpose — that's the point of rapid-fire prep. Say the bold-line
+answer *and* sketch the code example from memory, then check yourself against the matching
+module. If you can't reconstruct the example, you don't know it yet — just the sentence.
+
+1. Why does `x == y` sometimes return `true` and sometimes `false` for two `Integer`s
+   holding the same value? (module 01/09)
+2. What happens if you call an overridable method from inside a constructor? (module 02)
+3. Why can't you have `List<int>`? What three things does that break? (module 03)
+4. What's the difference between what `ArrayList.remove(int)` and `ArrayList.remove(Object)`
+   do, and why is `list.remove(1)` on a `List<Integer>` a classic gotcha? (module 03)
+5. Why does a `return` inside `finally` silently swallow an exception thrown in `try`? (module 04)
+6. What's the difference between `Files.lines(path)` and `Files.readAllLines(path)`, and
+   when does the difference matter? (module 04)
+7. Why is `flatMap` needed instead of just `map` for a `List<List<T>>`? (module 05)
+8. Why might a `parallelStream()` make a small pipeline *slower*, not faster? (module 05)
+9. Why does double-checked-locking Singleton break without `volatile`? (module 06/11)
+10. What's the actual difference between `wait()`/`notify()` and `Condition.await()`/`signal()`? (module 06)
+11. Why doesn't escape analysis let you rely on objects "usually" being stack-allocated? (module 07)
+12. What three things happen, in order, between `javac` and your `main` method running? (module 07)
+13. Why is a `record`'s auto-generated `equals()` sometimes *wrong* for your use case —
+    when would you override it by hand? (module 08)
+14. What does `permits` buy you that a plain (non-sealed) interface doesn't? (module 08)
+15. When would you choose Composite over just using a `List<Node>` directly? (module 11)
+16. Why does over-mocking (6+ mocked collaborators in one test) usually mean a design
+    problem, not a testing problem? (module 12)
+17. Why does constructor injection make a class testable *without* starting a Spring
+    context at all? (module 13)

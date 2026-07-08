@@ -75,6 +75,60 @@ String size = switch (shape) {
 };
 ```
 
+## Nested record patterns (Java 21)
+
+Deconstruction patterns nest — you can reach *inside* a record field that's itself a
+record, in one pattern, instead of chaining accessor calls:
+
+```java
+record Point(int x, int y) {}
+record Line(Point from, Point to) {}
+
+static String describe(Object o) {
+    return switch (o) {
+        case Line(Point(var x1, var y1), Point(var x2, var y2)) ->
+            "line from (%d,%d) to (%d,%d)".formatted(x1, y1, x2, y2);   // nested deconstruction
+        default -> "not a line";
+    };
+}
+```
+
+## Sequenced collections (Java 21) — uniform first/last access
+
+Before Java 21, "get the first/last element" and "iterate in reverse" had no common
+interface — `List` had `get(0)`/`get(size()-1)`, `LinkedHashSet` had neither directly,
+`Deque` had its own `getFirst`/`getLast`. `SequencedCollection`, `SequencedSet`, and
+`SequencedMap` unify this across `List`, `LinkedHashSet`, `LinkedHashMap`, `ArrayDeque`:
+
+```java
+List<Integer> list = new ArrayList<>(List.of(1, 2, 3));
+list.getFirst();          // 1 — no more list.get(0)
+list.getLast();            // 3 — no more list.get(list.size() - 1)
+list.addFirst(0);          // [0, 1, 2, 3]
+list.reversed();           // a VIEW, [3, 2, 1, 0] — not a copy, backed by the same list
+
+LinkedHashMap<String, Integer> map = new LinkedHashMap<>();
+map.put("a", 1); map.put("b", 2);
+map.firstEntry(); map.lastEntry();   // now available uniformly, previously HashMap-family-specific
+```
+
+## Local records, enums, and interfaces in methods (Java 16+)
+
+Not just local *classes* (which C++ devs may already expect) — records, enums, and
+interfaces can be declared inside a method body too, scoped to that method:
+
+```java
+List<String> summarize(List<Order> orders) {
+    record Bucket(String status, long count) {}       // local record, scoped to this method
+    return orders.stream()
+        .collect(Collectors.groupingBy(Order::status, Collectors.counting()))
+        .entrySet().stream()
+        .map(e -> new Bucket(e.getKey(), e.getValue()))
+        .map(b -> b.status() + ": " + b.count())
+        .toList();
+}
+```
+
 ## Text blocks (Java 15)
 ```java
 String html = """
@@ -88,6 +142,24 @@ String html = """
 - `Stream.toList()` (Java 16), `Files.readString`/`writeString` (Java 11).
 - Helpful NullPointerExceptions (Java 14) — messages name the exact null variable.
 - Virtual threads (Java 21, module 06).
+
+## Practice exercise — from scratch
+
+Open [`Exercise.java`](Exercise.java). A legacy `instanceof`-chain style `Expr` evaluator
+is given (a classic interview "before" state). Your job is the "after":
+
+1. Turn `Shape` (currently a plain abstract class with `instanceof` checks scattered in
+   `area()`) into a `sealed interface` permitting `Circle`, `Square`, `Triangle` records.
+2. Rewrite `area(Shape)` as an **exhaustive pattern-matching `switch`** with no `default`
+   branch — the compiler should refuse to compile if you forget a case.
+3. Add a `describe(Shape)` method using a deconstructing record pattern + a `when`
+   guard: a `Circle` binds its `radius` component in the pattern itself and describes
+   as `"large circle"` when `radius > 10`, otherwise `"circle"`; `Square`/`Triangle`
+   just describe as their simple class name, lowercased.
+
+```bash
+java -ea 08-modern-java/Exercise.java
+```
 
 ## Run
 

@@ -106,6 +106,70 @@ class UserController {
 }
 ```
 
+## `ApplicationContext` vs `BeanFactory`
+
+`BeanFactory` is the root container interface — lazy bean creation, minimal features.
+`ApplicationContext` extends it with eager singleton instantiation by default, event
+publishing, internationalization, and annotation processing. In practice you always use
+`ApplicationContext` (or Boot's auto-configured one); `BeanFactory` is rarely used directly.
+
+## Circular dependencies
+
+`A` needs `B` in its constructor, `B` needs `A` in its constructor — Spring can't decide
+which to build first and throws `BeanCurrentlyInCreationException` at startup.
+
+```java
+@Component class A { A(B b) {} }
+@Component class B { B(A a) {} }   // circular — fails fast at context startup
+```
+This is usually a **design smell** (two things that should be one, or a missing
+abstraction) — the "fix" of using field `@Autowired` (which Spring can resolve after both
+are constructed, via a setter-like injection) papers over the smell rather than fixing it.
+Prefer restructuring over reaching for field injection just to break the cycle.
+
+## `@Profile` — environment-specific beans
+
+```java
+@Component
+@Profile("prod")
+class RealPaymentGateway implements PaymentGateway { ... }
+
+@Component
+@Profile("test")
+class FakePaymentGateway implements PaymentGateway { ... }
+```
+Activate with `-Dspring.profiles.active=prod` (or `application-prod.properties` in Boot).
+Lets the same codebase wire different beans per environment without `if` branches.
+
+## Spring events — decoupled pub/sub inside the container
+
+The framework-native answer to the Observer pattern (module 11) noted there — no manual
+listener-list bookkeeping:
+
+```java
+class OrderPlacedEvent { final String orderId; OrderPlacedEvent(String id) { orderId = id; } }
+
+@Component
+class OrderService {
+    private final ApplicationEventPublisher publisher;
+    OrderService(ApplicationEventPublisher publisher) { this.publisher = publisher; }
+    void placeOrder(String id) { publisher.publishEvent(new OrderPlacedEvent(id)); }
+}
+
+@Component
+class EmailNotifier {
+    @EventListener
+    void onOrderPlaced(OrderPlacedEvent e) { System.out.println("email for " + e.orderId); }
+}
+```
+
+## `@Transactional` — one line, in brief
+
+Wraps a method in a database transaction, committing on normal return and rolling back
+on an unchecked exception (checked exceptions do **not** roll back by default — a classic
+gotcha). Not exercised in this dependency-light module (needs `spring-data`/a real
+datasource) — know the annotation and the rollback rule for interviews.
+
 ## Interview one-liners
 
 - **What problem does DI solve?** Decouples object construction from object use — enables
@@ -119,6 +183,28 @@ class UserController {
   dependencies, fails fast at startup, testable without a container.
 - **Singleton bean vs GoF Singleton pattern (module 11)?** Different scopes: a Spring
   singleton is one-per-**container**, not one-per-**JVM** like the GoF pattern.
+
+## Practice exercise — from scratch
+
+Two new beans and a `@Primary`/`@Qualifier` conflict to resolve, exercising both DI and
+plain-unit-testability:
+
+1. `PricingStrategy` interface with `double price(double base)` — already given.
+2. `StandardPricingStrategy` (`@Component @Primary`, returns `base` unchanged) — already
+   given.
+3. TODO: `DiscountPricingStrategy` — `@Component` with `@Qualifier("discount")`,
+   returns `base * 0.9`.
+4. TODO: `CheckoutService` — `@Component`, constructor-injects the `"discount"`-qualified
+   `PricingStrategy` (not the `@Primary` one — this is the whole point of the exercise),
+   with a `total(double base)` method delegating to it.
+5. TODO: fill in [`CheckoutServiceTest.java`](src/test/java/com/roadtojava/spring/CheckoutServiceTest.java)
+   — one plain unit test (`new CheckoutService(new DiscountPricingStrategy())`, **no**
+   Spring container) and one Spring-context test (boot `AppConfig`, get the bean, prove
+   the `@Qualifier` — not the `@Primary` — strategy was actually wired in).
+
+```bash
+cd 13-spring-basics && mvn test
+```
 
 ## Run
 

@@ -89,6 +89,99 @@ collections will silently misbehave. Records (module 08) generate all three for 
 - `static` members belong to the class, not instances — the closest thing to C++ free functions/globals.
 - `static` nested classes don't hold a reference to an outer instance (prefer these); inner (non-static) classes do.
 
+## Constructor & initialization order (interview favorite)
+
+When you `new` a subclass, Java runs, in this exact order:
+
+1. Parent's static initializers/blocks (once per class, first time it's loaded).
+2. Child's static initializers/blocks (once, first load).
+3. Parent's instance field initializers + instance initializer blocks, then parent
+   constructor body (`super(...)` runs *first*, even if not written explicitly).
+4. Child's instance field initializers + instance initializer blocks, then child
+   constructor body.
+
+```java
+class Parent {
+    { System.out.println("Parent instance block"); }      // instance initializer
+    Parent() { System.out.println("Parent ctor"); }
+}
+class Child extends Parent {
+    { System.out.println("Child instance block"); }
+    Child() { System.out.println("Child ctor"); }          // implicit super() call first
+}
+new Child();
+// prints: Parent instance block, Parent ctor, Child instance block, Child ctor
+```
+
+**Gotcha to name out loud:** calling an overridable method from a parent constructor is
+dangerous — the subclass override runs *before* the subclass's own fields are initialized.
+
+```java
+class Base {
+    Base() { init(); }          // calls the OVERRIDDEN version in Derived
+    void init() { }
+}
+class Derived extends Base {
+    private final String name = "set";
+    @Override void init() { System.out.println(name); }  // prints null — not "set" yet!
+}
+```
+
+## Nested classes — four kinds
+
+| Kind | Holds outer ref? | Use when |
+|------|-------------------|----------|
+| **Static nested** | no | groups a helper class with its owner; the default choice |
+| **Inner (non-static)** | yes, implicitly (`Outer.this`) | needs the enclosing instance's state |
+| **Local** (declared inside a method) | yes | used only within that one method |
+| **Anonymous** (`new Interface() { ... }`) | yes | one-off implementation, no reusable name — mostly superseded by lambdas for functional interfaces |
+
+```java
+class Outer {
+    int x = 10;
+    class Inner { int getX() { return x; } }              // implicit Outer.this.x
+    static class Nested { int compute() { return 42; } }   // no outer instance needed
+
+    Runnable makeTask() {
+        return new Runnable() {                            // anonymous class
+            public void run() { System.out.println(x); }   // still captures Outer.this
+        };
+    }
+}
+Outer o = new Outer();
+Outer.Inner inner = o.new Inner();     // needs an enclosing instance to construct
+Outer.Nested nested = new Outer.Nested(); // does not
+```
+
+## Interface evolution: `static` and `private` methods (Java 8/9)
+
+- `default` methods (Java 8): provide a body, overridable by implementers.
+- `static` methods (Java 8): utility methods namespaced to the interface, not inherited.
+- `private` methods (Java 9): share code *between* default methods without exposing it.
+
+```java
+interface Validator {
+    boolean isValid(String s);
+    static Validator notBlank() { return s -> !s.isBlank(); }   // static factory on the interface
+    default Validator and(Validator other) {
+        return s -> this.isValid(s) && other.isValid(s);
+    }
+    private void log(String s) { System.out.println("checked: " + s); } // helper, not part of the API
+}
+```
+
+## Covariant return types
+
+An override may narrow the return type to a subtype — useful for fluent/builder APIs and
+factory-method-style overrides.
+
+```java
+class Animal { Animal reproduce() { return new Animal(); } }
+class Dog extends Animal {
+    @Override Dog reproduce() { return new Dog(); }   // narrower return type — legal override
+}
+```
+
 ## Enums are real classes
 
 ```java
@@ -100,6 +193,22 @@ enum Planet {
 }
 ```
 Far more powerful than C++ enums — they have fields, methods, and can implement interfaces.
+
+## Practice exercise — from scratch
+
+Open [`Exercise.java`](Exercise.java). It gives you a `Shape` abstract class and a
+`Describable` interface with a `default` method, already written. Your job:
+
+1. Implement `Circle` and `Rectangle`, each extending `Shape` **and** implementing
+   `Describable`.
+2. Correctly override `equals`/`hashCode`/`toString` on both (value equality — two
+   `Circle`s with the same radius are equal; a `Circle` and a `Rectangle` are never
+   equal to each other even with matching "areas").
+3. Implement `Shape.totalArea(List<Shape> shapes)` as a `static` method.
+
+```bash
+java -ea 02-oop/Exercise.java
+```
 
 ## Run
 

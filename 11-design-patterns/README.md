@@ -118,6 +118,75 @@ The sender doesn't need to know which handler (if any) will act. **Real-world Ja
 examples you should cite:** Servlet `FilterChain`, Spring Security's filter chain — each
 filter decides to act and/or forward to the next one in line.
 
+## Patterns without a runnable file here — still worth knowing by name
+
+Interviewers sometimes ask about these even though this repo doesn't ship a dedicated
+example for each; know the one-liner and you can sketch the shape on a whiteboard.
+
+**State** — an object appears to change its class as its internal state changes; each
+state is its own class implementing a common interface, and the object delegates to its
+current state instead of branching on an enum/flag everywhere.
+
+```java
+interface OrderState { OrderState next(); String name(); }
+class Pending implements OrderState { public OrderState next() { return new Paid(); } public String name() { return "PENDING"; } }
+class Paid implements OrderState { public OrderState next() { return new Shipped(); } public String name() { return "PAID"; } }
+class Shipped implements OrderState { public OrderState next() { return this; } public String name() { return "SHIPPED"; } }
+```
+Contrast with Strategy (same UML shape): Strategy is chosen once by the *client* and
+swaps a whole algorithm; State is driven by the *object itself* transitioning between a
+fixed, closed set of states — a natural fit for `sealed interface` (module 08).
+
+**Prototype** — create new objects by cloning an existing instance instead of
+constructing from scratch, useful when construction is expensive or the concrete type
+isn't known until runtime. Java's built-in (if clunky) support is `Cloneable` +
+`Object.clone()`; in practice a copy-constructor or a `copy()` method on a record-like
+class is the idiomatic modern replacement.
+
+```java
+class Sheep implements Cloneable {
+    String name;
+    @Override public Sheep clone() { try { return (Sheep) super.clone(); } catch (CloneNotSupportedException e) { throw new AssertionError(e); } }
+}
+```
+
+**Abstract Factory** — a factory of *related* factories: one interface produces a whole
+*family* of objects that are meant to be used together (e.g. a UI toolkit's
+`Button`/`Checkbox` pair per look-and-feel), as opposed to Factory Method's single product.
+
+```java
+interface WidgetFactory { Button createButton(); Checkbox createCheckbox(); }
+class DarkThemeFactory implements WidgetFactory { /* returns dark-themed variants of both */ }
+```
+
+**Visitor** — add a new operation over a closed set of types without modifying those
+types, by double-dispatching to a per-type `visit` method. **Java-specific angle:** since
+Java 17, an exhaustive pattern-matching `switch` over a `sealed` hierarchy (module 08)
+achieves the same goal — add a new operation as a new method/switch, without touching the
+data types — with far less boilerplate than the classic `accept(Visitor)` dance.
+
+**Memento** — capture and externalize an object's internal state (for undo/rollback)
+without violating encapsulation. In modern Java, an immutable `record` snapshot of the
+relevant fields *is* the memento — no separate `Memento` class/friend-access trick needed.
+
+## Practice exercise — from scratch
+
+Open [`Exercise.java`](Exercise.java). Implement the **State** pattern for a traffic
+light:
+
+1. A sealed `LightState` interface with three implementations (`Red`, `Yellow`, `Green`),
+   each knowing which state comes `next()` and how long it lasts (`durationSeconds()`).
+   Cycle: Red → Green → Yellow → Red.
+2. A `TrafficLight` class holding the current state, with `advance()` (moves to
+   `next()`) and `current()`.
+3. A `totalCycleSeconds(TrafficLight)` helper that advances a **fresh** light three
+   times and sums the durations seen (proving a full cycle is deterministic regardless
+   of which state it started in).
+
+```bash
+java -ea 11-design-patterns/Exercise.java
+```
+
 ## Run
 
 ```bash

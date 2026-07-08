@@ -89,11 +89,80 @@ when(spyList.size()).thenReturn(100); // this one call is stubbed
 - Over-mocking: if you're mocking 6 collaborators, the class under test probably has too
   many responsibilities (violates SRP).
 
+## Test doubles — the full taxonomy (not just "mock")
+
+Interviewers who've read Meszaros/Fowler expect these five distinguished, not used as
+synonyms:
+
+| Double | Behavior |
+|--------|----------|
+| **Dummy** | passed to satisfy a signature, never actually used (e.g. `null`, or a no-op object) |
+| **Stub** | returns canned answers to calls, no real logic (`when(x).thenReturn(...)`) |
+| **Fake** | a working but simplified implementation (e.g. an in-memory `Map`-backed repo instead of a real DB) |
+| **Spy** | wraps a real object; real methods run unless overridden |
+| **Mock** | a stub that also lets you `verify()` it was called — asserts on *interactions*, not just state |
+
+Mockito's `mock()` actually gives you a stub-or-mock depending on whether you `verify()`
+it; the taxonomy is about intent, not a hard Mockito API distinction.
+
+## `@TestInstance` — per-method vs per-class lifecycle
+
+By default JUnit 5 creates a **new test instance per test method** (`PER_METHOD`) — so
+instance fields can't leak state between tests without `@BeforeEach` resetting them.
+`@TestInstance(Lifecycle.PER_CLASS)` shares one instance across all tests in the class,
+which is what lets `@BeforeAll`/`@AfterAll` be non-static.
+
+```java
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class ExpensiveSetupTest {
+    @BeforeAll void setUpOnce() { /* not static — needs PER_CLASS */ }
+}
+```
+
+## Unit vs integration tests
+
+- **Unit test**: one class, dependencies mocked/faked, no real I/O — fast, this module's
+  focus.
+- **Integration test**: exercises real collaborators (a real database, a real HTTP call,
+  a real Spring context via `@SpringBootTest`) — slower, catches wiring bugs unit tests
+  can't (module 13's `SpringContextTest` is effectively this).
+A healthy suite is mostly unit tests with a thinner layer of integration tests on top
+(the "test pyramid") — not the other way around.
+
+## TDD in one paragraph
+
+Red (write a failing test for behavior that doesn't exist yet) → Green (write the
+*minimum* code to pass it) → Refactor (clean up, tests still green). Interviewers rarely
+require strict TDD in a live coding round, but "how would you approach writing this with
+tests first" is a fair follow-up — know the cycle by name.
+
+## Code coverage — a number, not a goal
+
+Line/branch coverage (tools: JaCoCo) tells you what's *executed*, not what's *correctly
+asserted* — 100% coverage with no assertions is worthless. Useful for finding completely
+untested code paths, not as a quality target to chase for its own sake.
+
 ## What "good unit test" means here
 - Tests one unit in isolation (mock its dependencies).
 - Deterministic — no real network/filesystem/clock without seams.
 - One logical assertion concept per test; name describes the scenario + expectation.
 - Fast — a whole suite should run in seconds, not minutes.
+
+## Practice exercise — write the tests from scratch
+
+`src/main/java/discount/DiscountCalculator.java` is a small, already-implemented class
+(loyalty-based discount pricing — a couple of branches and an exception). Open
+[`src/test/java/discount/DiscountCalculatorTest.java`](src/test/java/discount/DiscountCalculatorTest.java):
+every test method body currently calls `fail("TODO")`. Replace each with a real test:
+
+1. `noDiscountUnderTwoYears` — loyalty `0` or `1` years → full price, no discount.
+2. `tenPercentDiscountForTwoToFourYears` — a `@ParameterizedTest` over `{2, 3, 4}`.
+3. `twentyPercentDiscountAtFiveYearsAndAbove` — a `@ParameterizedTest` over `{5, 10, 50}`.
+4. `nonPositivePriceThrows` — `assertThrows` for `price <= 0`.
+
+```bash
+cd 12-testing && mvn test
+```
 
 ## Run
 

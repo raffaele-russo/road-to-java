@@ -59,6 +59,26 @@ Study the *style*, not just the solution — that's what's being graded once the
 is correct: right collection for the job, clean naming, no off-by-one boundary bugs, and
 being able to state the Big-O out loud unprompted.
 
+## Practice — unsolved, from scratch
+
+Four more problems, same style as above, but **not solved for you**: each method throws
+`UnsupportedOperationException("TODO")` — implement it and get the `assert`s in `main`
+to pass.
+
+| File | Pattern | Complexity |
+|------|---------|------------|
+| `MergeIntervals.java` | sort by start, walk once, extend-or-start-new | O(n log n) |
+| `ProductExceptSelf.java` | prefix pass then suffix pass folded into the output array, no division | O(n) time, O(1) extra space |
+| `KthLargestElement.java` | size-`k` min-heap (`PriorityQueue`), same idea as `TopKFrequent` | O(n log k) |
+| `MaxSubArray.java` | Kadane's algorithm — DP collapsed into a running variable | O(n) time, O(1) space |
+
+```bash
+java -ea 10-coding-problems/MergeIntervals.java
+java -ea 10-coding-problems/ProductExceptSelf.java
+java -ea 10-coding-problems/KthLargestElement.java
+java -ea 10-coding-problems/MaxSubArray.java
+```
+
 ## Pattern-recognition cheat sheet (what to reach for, given the shape of the problem)
 
 | If the problem says... | Reach for |
@@ -75,3 +95,7 @@ being able to state the Big-O out loud unprompted.
 | sorted array, pair/triplet with a target sum | two pointers (`ThreeSum`) |
 | "longest/shortest substring/subarray satisfying X" | sliding window (`LongestSubstringWithoutRepeating`) |
 | balanced brackets, "most recent unmatched" | stack (`ValidParentheses`) |
+| "merge/schedule overlapping ranges" | sort by start + linear merge (`MergeIntervals`) |
+| "product/sum of everything except index i", no division | prefix/suffix pass (`ProductExceptSelf`) |
+| "kth largest/smallest" | size-k heap (`KthLargestElement`) |
+| "max sum contiguous subarray" | Kadane's / running-max DP (`MaxSubArray`) |
