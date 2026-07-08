@@ -32,19 +32,46 @@ Java interviewer expects: the right collections, the power methods, clean stream
 
 ## Worked examples (all runnable)
 
-Each has a `main` with assertions so you can confirm correctness:
+Every file has a `main` with `assert` statements — run with `-ea` to actually enable them
+(Java assertions are off by default):
 
 ```bash
-java 10-coding-problems/TwoSum.java
-java 10-coding-problems/GroupAnagrams.java
-java 10-coding-problems/GraphBfs.java
-java 10-coding-problems/TopKFrequent.java
+java -ea 10-coding-problems/TwoSum.java
 ```
 
-- **TwoSum** — HashMap one-pass; the canonical "use a map" pattern.
-- **GroupAnagrams** — `computeIfAbsent` bucketing + sorted-key trick.
-- **GraphBfs** — adjacency list with `Map<Integer,List<Integer>>`, `ArrayDeque` queue.
-- **TopKFrequent** — `merge` counting + `PriorityQueue` min-heap of size k.
+| File | Pattern | Complexity |
+|------|---------|------------|
+| `TwoSum.java` | HashMap one-pass — the canonical "use a map" pattern | O(n) time |
+| `GroupAnagrams.java` | `computeIfAbsent` bucketing + sorted-key signature | O(n·k log k) |
+| `GraphBfs.java` | adjacency list (`Map<Integer,List<Integer>>`) + `ArrayDeque` BFS queue | O(V+E) |
+| `TopKFrequent.java` | `merge` counting + size-`k` min-heap (`PriorityQueue`) | O(n log k) |
+| `ReverseLinkedList.java` | 3-pointer walk, iterative **and** recursive forms | O(n) / O(1)\|O(n) space |
+| `BinaryTreeTraversal.java` | recursive DFS (in/pre/post-order) + iterative DFS (stack) + BFS (queue, level order) | O(n) |
+| `BinarySearch.java` | classic search + `lowerBound`/first-last-occurrence variant | O(log n) |
+| `Sorting.java` | merge sort (stable, guaranteed O(n log n)) + quicksort (in-place, Lomuto partition) | O(n log n) |
+| `ValidParentheses.java` | stack-based bracket matching | O(n) |
+| `Permutations.java` | backtracking template: choose → recurse → un-choose | O(n!·n) |
+| `CoinChange.java` | bottom-up DP, `dp[i]` = fewest coins for amount `i` | O(amount·coins) |
+| `ThreeSum.java` | sort + fix one element + two-pointer inward walk, with dedup | O(n²) |
+| `LongestSubstringWithoutRepeating.java` | sliding window with a `HashMap<Character,Integer>` of last-seen index | O(n) |
 
 Study the *style*, not just the solution — that's what's being graded once the algorithm
-is correct.
+is correct: right collection for the job, clean naming, no off-by-one boundary bugs, and
+being able to state the Big-O out loud unprompted.
+
+## Pattern-recognition cheat sheet (what to reach for, given the shape of the problem)
+
+| If the problem says... | Reach for |
+|---|---|
+| "two numbers that sum to X" / "have I seen this before" | HashMap (`TwoSum`) |
+| "group / bucket by some key" | `computeIfAbsent` (`GroupAnagrams`) |
+| "shortest path", "levels", "fewest steps" in an unweighted graph/grid | BFS (`GraphBfs`) |
+| "top k" / "k most/least" | heap (`PriorityQueue`) sized to k (`TopKFrequent`) |
+| sorted array, "find X" | binary search (`BinarySearch`) |
+| linked list, reverse/detect cycle/merge | pointer manipulation (`ReverseLinkedList`) |
+| tree, "traverse", "depth", "level" | DFS recursion or BFS queue (`BinaryTreeTraversal`) |
+| "all combinations/permutations/subsets" | backtracking (`Permutations`) |
+| "minimum/maximum ways to reach a target", overlapping subproblems | dynamic programming (`CoinChange`) |
+| sorted array, pair/triplet with a target sum | two pointers (`ThreeSum`) |
+| "longest/shortest substring/subarray satisfying X" | sliding window (`LongestSubstringWithoutRepeating`) |
+| balanced brackets, "most recent unmatched" | stack (`ValidParentheses`) |

@@ -4,21 +4,35 @@ A self-study repo for an experienced **C++ developer** moving to **Java**, struc
 from easier to harder. Every module has a `README.md` with **theory + a C++
 comparison** and **runnable example files** you can execute on their own.
 
-Built and tested against **Java 21 (LTS)**.
+Built and tested against **Java 21 (LTS)**. Modules 12–13 additionally use **Maven**
+(`brew install maven`) since JUnit/Mockito/Spring aren't part of the JDK.
 
 ## How to use this repo
 
-Each `.java` example has a `main` method and is a *single-file program*. With Java 11+
-you can run any file directly without compiling first:
+Modules 00–11 are pure JDK: each `.java` example has a `main` method and is a
+*single-file program*. With Java 11+ you can run any file directly without compiling first:
 
 ```bash
 java 01-basics/Basics.java
+```
+
+Files under `10-coding-problems/` use `assert` — enable assertions with `-ea`:
+
+```bash
+java -ea 10-coding-problems/TwoSum.java
 ```
 
 To compile the classic way:
 
 ```bash
 javac 01-basics/Basics.java && java -cp 01-basics Basics
+```
+
+Modules 12–13 are Maven projects (JUnit/Mockito/Spring need real dependencies):
+
+```bash
+cd 12-testing && mvn test
+cd 13-spring-basics && mvn test && mvn compile exec:java
 ```
 
 Work top to bottom. Read the module `README.md`, then run and tweak the examples.
@@ -38,7 +52,10 @@ Don't just read — change values, break things, re-run.
 | 07 | [JVM & Memory](07-jvm-memory/README.md) | GC, heap/stack, class loading, JIT | ⭐⭐ |
 | 08 | [Modern Java](08-modern-java/README.md) | Records, sealed types, pattern matching, `var` | ⭐⭐ |
 | 09 | [Interview Q&A](09-interview-qa/README.md) | Rapid-fire questions with answers | ⭐⭐⭐ |
-| 10 | [Coding problems](10-coding-problems/README.md) | Idiomatic Java for DS&A / LeetCode-style | ⭐⭐⭐ |
+| 10 | [Coding problems](10-coding-problems/README.md) | 13 problems: HashMap, BFS, heaps, DP, backtracking, sliding window, two pointers | ⭐⭐⭐ |
+| 11 | [Design Patterns](11-design-patterns/README.md) | Singleton, Factory, Builder, Adapter, Decorator, Strategy, Observer — the Java-specific angle on each | ⭐⭐⭐ |
+| 12 | [Testing](12-testing/README.md) | JUnit 5 (assertions, lifecycle, parameterized) + Mockito (mocks, stubs, verify) | ⭐⭐⭐ |
+| 13 | [Spring Basics](13-spring-basics/README.md) | DI/IoC, bean scopes/lifecycle, annotations — real runnable Spring project | ⭐⭐⭐ |
 
 ## The 10 things that trip up C++ devs
 

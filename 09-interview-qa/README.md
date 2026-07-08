@@ -122,6 +122,78 @@ Runtime compiler turning hot bytecode into optimized native code; tiered C1/C2.
 **Q: JDK vs JRE vs JVM?**
 JVM runs bytecode. JRE = JVM + core libs. JDK = JRE + compiler/tools (`javac`, `jar`).
 
+## Design patterns
+
+**Q: Why is enum the recommended Singleton implementation?**
+Free serialization-safety and reflection-safety (a normal class's private constructor
+can still be invoked via reflection; enums can't be instantiated that way). Also
+thread-safe by construction — no double-checked locking needed.
+
+**Q: Why does double-checked-locking Singleton need `volatile`?**
+Without it, the JMM permits instruction reordering that lets another thread observe a
+reference to a *partially constructed* object — the field write can appear to happen
+before the constructor finishes.
+
+**Q: Builder vs telescoping constructors?**
+Java has no named/default parameters, so multiple overloaded constructors
+(`Foo(a)`, `Foo(a,b)`, `Foo(a,b,c)`) get unreadable fast. A fluent builder scales to many
+optional fields and can validate at `build()` time.
+
+**Q: Decorator vs inheritance?**
+Decorator composes behavior at runtime by wrapping the same interface (like `java.io`
+stream classes); avoids a combinatorial explosion of subclasses for every combination
+of behaviors.
+
+**Q: How did Java 8 change the Strategy pattern?**
+A single-method strategy interface can now be satisfied by a lambda instead of a named
+class — `Comparator`, `Function`, `Predicate` are all "strategy" slots you fill inline.
+
+**Q: Adapter vs Decorator vs Facade — what's the difference?**
+Adapter: makes an *incompatible* interface *compatible* (translates). Decorator: adds
+behavior to a *compatible* interface (same shape, more responsibility). Facade:
+simplifies a *complex subsystem* behind one easy interface (no wrapping of a single object).
+
+## Testing
+
+**Q: How do you unit test a class with dependencies?**
+Inject dependencies (constructor injection) so they can be replaced with test doubles;
+mock them with Mockito, stub the calls you need, and assert on the class under test's
+behavior in isolation.
+
+**Q: Mock vs Spy?**
+Mock: a bare fake, everything returns null/0/false unless stubbed. Spy: wraps a *real*
+object, real methods run unless you explicitly override them.
+
+**Q: Why prefer `assertThrows` over try/catch + fail()?**
+Shorter, and it fails clearly if *no* exception is thrown (a bare try/catch that doesn't
+call `fail()` in the try block can silently pass a test that never threw).
+
+**Q: What's a flaky test and what usually causes it?**
+A test that passes/fails nondeterministically — usually real time (`Thread.sleep`,
+`System.currentTimeMillis`), unmocked randomness, real network calls, or shared mutable
+state leaking between tests (missing `@BeforeEach` reset).
+
+## Spring / DI
+
+**Q: What problem does Dependency Injection solve?**
+Decouples an object from constructing its own dependencies — a container wires them in,
+so implementations can be swapped (real vs mock) and configuration is centralized.
+
+**Q: Constructor injection vs field `@Autowired`?**
+Constructor injection makes dependencies explicit and `final`, fails fast at startup if a
+bean is missing, and works in plain unit tests without a Spring container at all.
+
+**Q: `@Component` vs `@Bean`?**
+`@Component` annotates a class you own, picked up by `@ComponentScan`. `@Bean` is a
+factory method inside a `@Configuration` class — for wiring types you don't own/can't annotate.
+
+**Q: What does `@SpringBootApplication` expand to?**
+`@Configuration` + `@ComponentScan` + `@EnableAutoConfiguration`.
+
+**Q: Spring singleton scope vs the GoF Singleton pattern (module 11)?**
+A Spring singleton bean is one instance **per container** (you can have multiple
+containers, or refresh one), not one instance per JVM like the classic GoF pattern.
+
 ## Design / good taste
 
 **Q: SOLID in one line each?**
