@@ -91,27 +91,81 @@ collections will silently misbehave. Records (module 08) generate all three for 
 
 ## Constructor & initialization order (interview favorite)
 
-When you `new` a subclass, Java runs, in this exact order:
+When you write `new Child()`, Java does **not** start by running the visible lines
+inside `Child()`. A constructor must first build the parent part of the object.
 
-1. Parent's static initializers/blocks (once per class, first time it's loaded).
-2. Child's static initializers/blocks (once, first load).
-3. Parent's instance field initializers + instance initializer blocks, then parent
-   constructor body (`super(...)` runs *first*, even if not written explicitly).
-4. Child's instance field initializers + instance initializer blocks, then child
-   constructor body.
+Precise sequence for a `Child()` constructor that uses the implicit `super()`:
+
+1. Load/initialize `Parent` statics, if not already initialized.
+2. Load/initialize `Child` statics, if not already initialized.
+3. Allocate the object; all instance fields start with default values (`0`, `false`, `null`).
+4. Enter `Child()`. Its first action is the implicit `super()` call.
+5. Enter `Parent()`. Its first action is `super()` to `Object`.
+6. After `Object` returns, run `Parent` instance field initializers and instance
+   initializer blocks, in source order.
+7. Run the rest of the `Parent` constructor body.
+8. Return to `Child()`.
+9. Run `Child` instance field initializers and instance initializer blocks, in
+   source order.
+10. Run the rest of the `Child` constructor body.
+
+Think of construction as flowing **down the inheritance chain to `Object` first**,
+then executing initialization **back up from parent to child**.
 
 ```java
 class Parent {
-    { System.out.println("Parent instance block"); }      // instance initializer
-    Parent() { System.out.println("Parent ctor"); }
+    static String parentStatic = log("1. Parent static field");
+    static { log("2. Parent static block"); }
+
+    String parentField = log("5. Parent instance field");
+    { log("6. Parent instance block"); }
+
+    Parent() {
+        // super() to Object is inserted here by the compiler.
+        log("7. Parent constructor body");
+    }
+
+    static String log(String message) {
+        System.out.println(message);
+        return message;
+    }
 }
+
 class Child extends Parent {
-    { System.out.println("Child instance block"); }
-    Child() { System.out.println("Child ctor"); }          // implicit super() call first
+    static String childStatic = log("3. Child static field");
+    static { log("4. Child static block"); }
+
+    String childField = log("8. Child instance field");
+    { log("9. Child instance block"); }
+
+    Child() {
+        // super() is inserted here by the compiler, before this body runs.
+        log("10. Child constructor body");
+    }
+
+    public static void main(String[] args) {
+        new Child();
+    }
 }
-new Child();
-// prints: Parent instance block, Parent ctor, Child instance block, Child ctor
 ```
+
+Output:
+
+```text
+1. Parent static field
+2. Parent static block
+3. Child static field
+4. Child static block
+5. Parent instance field
+6. Parent instance block
+7. Parent constructor body
+8. Child instance field
+9. Child instance block
+10. Child constructor body
+```
+
+Run `new Child()` a second time in the same program and lines 1-4 will **not**
+print again: static initialization belongs to the class, not to each object.
 
 **Gotcha to name out loud:** calling an overridable method from a parent constructor is
 dangerous — the subclass override runs *before* the subclass's own fields are initialized.
