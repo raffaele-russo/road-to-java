@@ -87,6 +87,22 @@ not add the dependency; JPMS adds readability/export rules; `verify` is repeatab
 machine-enforced. Exercise: inspect this root build with `help:effective-pom`,
 `dependency:tree`, `jar`, `javap`, and `jdeps`, then explain one observation from each.
 
+## Progressive example and exercise
+
+Predict the result before running [`ToolingLab.java`](ToolingLab.java). The minimal case converts
+a binary class name to its JAR entry, the composition case asks the runtime which JPMS module owns
+`HttpClient`, and the boundary case demonstrates why a Java 25 class cannot run on Java 21. This
+replaces the C++ assumption that a successful native link settles runtime compatibility.
+
+```bash
+java -ea 14-build-tooling/ToolingLab.java
+java -ea 14-build-tooling/Solution.java
+```
+
+Expected: both print a single `passed` line. Implement [`Exercise.java`](Exercise.java) first.
+Hints: distinguish a binary name from a path; class-file release must not exceed runtime release;
+then replace dots with slashes and compare the releases. Reference: [`Solution.java`](Solution.java).
+
 ## 17/21 compatibility
 
 The build targets 25. To support 17 or 21, set `maven.compiler.release` to that version and

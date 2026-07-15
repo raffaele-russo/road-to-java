@@ -5,6 +5,14 @@
 Operate the capstone: obtain useful telemetry, diagnose runtime behavior from evidence, measure
 performance correctly, build a container, and deliver compatible changes through CI.
 
+## Mental model and C++ bridge
+
+Production behavior is a feedback system: workload enters, finite resources saturate, telemetry
+describes symptoms, and controlled changes test hypotheses. A JVM removes manual deallocation but
+does not remove CPU, memory, thread, connection, queue, or latency budgets. As with native systems,
+begin with evidence; unlike a local C++ process, a backend's client-visible tail latency and
+dependency health are part of correctness.
+
 ## Observability
 
 Logs describe discrete events, metrics aggregate trends, and traces connect work across boundaries.
@@ -64,3 +72,18 @@ remains backward compatible; otherwise roll forward.
 Given rising p99 latency with flat CPU, choose telemetry and form hypotheses without changing JVM
 flags. Record a short JFR, inspect capstone metrics/traces/log correlation, terminate the container
 during work, and document whether shutdown preserved invariants and message processing.
+
+## Progressive example and mastery evidence
+
+The minimal exercise maps symptoms to first evidence; the JMH benchmark demonstrates correct
+microbenchmark structure; the capstone composes health, metrics, tracing, containers, and bounded
+shutdown. A healthy JVM with an unavailable required database remains live but must not be ready.
+
+```bash
+java -ea 21-production/Solution.java
+./mvnw -pl 21-production compile exec:java -Dexec.args='StringBuildingBenchmark -wi 3 -i 5 -f 1'
+```
+
+Start with [`Exercise.java`](Exercise.java). Hints: choose evidence that distinguishes hypotheses;
+readiness answers whether traffic should arrive; map CPU to thread CPU/JFR and memory growth to
+heap-after-GC evidence. Passing JMH means it reports results, not that one technique always wins.

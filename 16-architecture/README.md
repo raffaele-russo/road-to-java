@@ -63,3 +63,18 @@ Sketch the order-service dependency direction. Identify the owner of state trans
 transaction boundary, DTO mapping boundary, and outbox port. Then explain why extracting each
 as a network service would make correctness harder. Validate the design against the package
 rules and tests in module 22.
+
+## Progressive example and mastery evidence
+
+[`ArchitectureLab.java`](ArchitectureLab.java) begins with an invariant-owning object, composes it
+with an immutable collection snapshot, then deliberately repeats a terminal transition. GC does
+not remove aliasing or state ownership; Java uses defensive copies where C++ might use values.
+
+```bash
+java -ea 16-architecture/ArchitectureLab.java
+java -ea 16-architecture/Solution.java
+```
+
+Implement [`Exercise.java`](Exercise.java). Hints: name who owns the list and state; copy at the
+boundary and enumerate legal transitions; use `List.copyOf` and fail closed. Module 22 verifies
+the realistic package-dependency and transaction composition.

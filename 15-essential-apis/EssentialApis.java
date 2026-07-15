@@ -1,6 +1,9 @@
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URI;
+import java.net.http.HttpRequest;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -32,6 +35,10 @@ public class EssentialApis {
         assert musicalSymbol.length() == 2 && musicalSymbol.codePointCount(0, musicalSymbol.length()) == 1;
         assert Pattern.compile("[A-Z]{3}-\\d{4}").matcher("ORD-2026").matches();
         assert UUID.fromString(UUID.randomUUID().toString()) != null;
+
+        HttpRequest request = HttpRequest.newBuilder(URI.create("https://example.invalid/orders"))
+            .timeout(Duration.ofSeconds(2)).GET().build();
+        assert request.timeout().orElseThrow().equals(Duration.ofSeconds(2));
         System.out.println("Essential API contracts passed.");
     }
 }

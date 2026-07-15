@@ -71,3 +71,20 @@ repository queries, transaction boundary, pagination ordering, and Testcontainer
 
 Hints: begin with the invariant; identify the competing statements; decide whether rejection,
 retry, or blocking matches the use case; make the database enforce what it can.
+
+## Progressive example, failure mode, and mastery evidence
+
+[`PersistenceLab.java`](PersistenceLab.java) is a deterministic model, not a database substitute:
+it isolates version comparison and unique keyset ordering before module 22 applies those contracts
+to PostgreSQL. Its boundary case rejects a stale writer.
+
+```bash
+java -ea 17-sql-persistence/PersistenceLab.java
+java -ea 17-sql-persistence/Solution.java
+./mvnw -pl 22-order-service -Dtest=PostgresMigrationTest test
+```
+
+The third command needs Docker and proves real constraints and migrations. Implement
+[`Exercise.java`](Exercise.java). Hints: compare the expected version before incrementing; sort by
+a unique immutable key; select values strictly after the cursor. Use SQL counts—not a `LAZY`
+annotation—to prove or refute N+1 behavior.

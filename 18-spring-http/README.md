@@ -51,3 +51,19 @@ Use plain unit tests for domain/use cases, MVC slice tests for mapping/validatio
 full integration tests for serialization, database, migrations, and filters. Explain why an
 HTTP 500 is not an acceptable mapping for an invalid state transition, then trace a capstone
 request from JSON through transaction and back to a problem response.
+
+## Progressive example and mastery evidence
+
+[`HttpLab.java`](HttpLab.java) creates a bounded JDK request, maps a domain conflict to a stable
+problem, and proves an unexpected exception cannot expose internal detail. HTTP is a versioned
+wire protocol, not a direct method call: timeout, status, headers, and body are all contract.
+
+```bash
+java -ea 18-spring-http/HttpLab.java
+java -ea 18-spring-http/Solution.java
+./mvnw -pl 22-order-service -Dtest=OrderControllerTest test
+```
+
+Implement [`Exercise.java`](Exercise.java). Hints: classify known failures; use a constant safe
+detail for unknown failures; reject non-positive durations and cap the requested timeout. The MVC
+test proves validation, serialization, security, and `problem+json` composition.

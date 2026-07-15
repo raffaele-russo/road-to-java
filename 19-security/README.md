@@ -49,3 +49,19 @@ relevant actions, and test both permitted and forbidden cases.
 Explain why verifying a JWT does not stop an insecure direct-object reference. In module 22,
 test missing/invalid tokens, insufficient authority, wrong ownership, admin access, expired-token
 behavior, and redaction. State whether each failure should be 401, 403, or deliberately 404.
+
+## Progressive example and mastery evidence
+
+[`SecurityLab.java`](SecurityLab.java) separates a valid principal, required authority, and object
+ownership, then demonstrates credential redaction. A verified JWT is identity evidence, not
+permission for every object named by a request.
+
+```bash
+java -ea 19-security/SecurityLab.java
+java -ea 19-security/Solution.java
+./mvnw -pl 22-order-service -Dtest=OrderServiceIntegrationTest test
+```
+
+Implement [`Exercise.java`](Exercise.java). Hints: no principal means 401; missing authority or a
+visible forbidden owner means 403; ownership may deliberately be hidden as 404. Never put a real
+token into an example or assertion message. Capstone tests prove Spring Security composition.

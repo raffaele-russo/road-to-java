@@ -59,3 +59,18 @@ Walk through crashes before commit, after commit/before publish, after publish/b
 during consumer commit. For each, prove how the capstone recovers and whether it can duplicate an
 event or effect. Then distinguish an idempotency key from optimistic locking: they solve request
 replay and concurrent state mutation respectively.
+
+## Progressive example and mastery evidence
+
+[`ReliabilityLab.java`](ReliabilityLab.java) isolates a bounded retry and an idempotent consumer
+effect. It retries two transient failures and delivers one event twice. This proves only local
+contracts; the capstone outbox demonstrates durable composition and crash recovery.
+
+```bash
+java -ea 20-distributed-systems/ReliabilityLab.java
+java -ea 20-distributed-systems/Solution.java
+```
+
+Implement [`Exercise.java`](Exercise.java). Hints: validate the budget, remember the last failure,
+and use the boolean returned by `Set.add`. Production needs a durable unique key in the same
+transaction as the effect plus retry classification, backoff, jitter, deadlines, and load limits.

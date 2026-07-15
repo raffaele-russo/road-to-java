@@ -71,3 +71,23 @@ runtime. Prefer normal calls and explicit composition until metadata removes gen
 Explain why an order uses `BigDecimal`, `Instant`, `UUID`, and DTO records. Then run the two
 examples, add a DST-overlap case, a supplementary Unicode code point, and an annotation whose
 runtime retention you can observe. Reference behavior is asserted in each example.
+
+## Progressive example and mastery evidence
+
+[`EssentialApis.java`](EssentialApis.java) supplies realistic money/time/text composition and
+[`Metadata.java`](Metadata.java) covers runtime metadata. The focused exercise adds three boundary
+cases: decimal input from text, a supplementary code point plus combining mark, and the duplicated
+local time during the Paris DST overlap. `String.length()` counts UTF-16 units; even code-point
+count is not a user-perceived grapheme count.
+
+```bash
+java -ea 15-essential-apis/EssentialApis.java
+java -ea 15-essential-apis/Metadata.java
+java -ea 15-essential-apis/Solution.java
+JAVA=/path/to/jdk-25/bin/java ./scripts/verify-jdk-examples.sh # includes ServiceLoader resources
+```
+
+Start with [`Exercise.java`](Exercise.java). Hints: construct decimals from strings; ask `String`
+for code points; ask `ZoneRules` for valid offsets. The capstone proves HTTP/JSON composition.
+The service-loader fixture includes the required `META-INF/services` registration; merely
+implementing the provider interface does not make a provider discoverable.
