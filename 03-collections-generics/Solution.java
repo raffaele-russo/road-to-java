@@ -18,13 +18,13 @@ public class Exercise {
             data.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
         }
 
-        List<V> get(K key) {;
-            return data.get(key);
+        List<V> get(K key) {
+            return data.containsKey(key) ? List.copyOf(data.get(key)) : List.of();
         }
 
         int size() {
             // number of KEYS, not total values
-            return data.keySet().size();
+            return data.size();
         }
     }
 
@@ -35,14 +35,15 @@ public class Exercise {
         private final int capacity;
 
         LruCache(int capacity) {
-            super(0,.75f,true); // TODO: call the right super constructor for access-order mode
+            super(Math.max(1, capacity), .75f, true);
+            if (capacity < 1) throw new IllegalArgumentException("capacity must be positive");
             this.capacity = capacity;
         }
 
         // TODO: override removeEldestEntry(Map.Entry<K, V> eldest)
         @Override 
-        public boolean removeEldestEntry(Map.Entry<K, V> eldest){
-            return true;
+        protected boolean removeEldestEntry(Map.Entry<K, V> eldest){
+            return size() > capacity;
         }
     }
 

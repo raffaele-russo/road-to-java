@@ -1,5 +1,14 @@
 # 10 — Coding problems, the idiomatic-Java way
 
+## Learning outcome and prerequisite
+
+**Outcome:** Recognize algorithm shapes, implement them idiomatically, and state time/space complexity.
+
+Follow the repository [learning contract](../LEARNING-CONTRACT.md): form a mental model,
+run and change the demonstrations, explain the failure modes, complete the exercise without
+the solution open, and answer retrieval questions aloud. Prerequisite: complete the earlier
+modules in the same roadmap track unless this module states otherwise.
+
 For a C++ dev, the algorithms are the easy part — the goal here is writing them the way a
 Java interviewer expects: the right collections, the power methods, clean streams.
 
@@ -99,3 +108,14 @@ java -ea 10-coding-problems/MaxSubArray.java
 | "product/sum of everything except index i", no division | prefix/suffix pass (`ProductExceptSelf`) |
 | "kth largest/smallest" | size-k heap (`KthLargestElement`) |
 | "max sum contiguous subarray" | Kadane's / running-max DP (`MaxSubArray`) |
+
+## Retrieval practice, hints, and solution
+
+1. State the invariant of a sliding window.
+2. When is a size-k heap better than sorting?
+3. Which tests expose an off-by-one boundary?
+
+Hints: first name the governing contract; then construct the smallest counterexample; finally
+write the invariant or pseudocode before reaching for an API. Run the checks after each step.
+
+Reference feedback: Reference implementations are in [`solutions/`](solutions/).

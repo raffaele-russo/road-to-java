@@ -1,5 +1,14 @@
 # 01 — Basics: types, references, strings, arrays
 
+## Learning outcome and prerequisite
+
+**Outcome:** Write and reason about primitive, numeric, Unicode string, array, and control-flow code.
+
+Follow the repository [learning contract](../LEARNING-CONTRACT.md): form a mental model,
+run and change the demonstrations, explain the failure modes, complete the exercise without
+the solution open, and answer retrieval questions aloud. Prerequisite: complete the earlier
+modules in the same roadmap track unless this module states otherwise.
+
 ## Primitive types (the only non-objects)
 
 | Type | Size | Range / notes | C++ analog |
@@ -174,3 +183,14 @@ java -ea 01-basics/Exercise.java
 ```bash
 java 01-basics/Basics.java
 ```
+
+## Retrieval practice, hints, and solution
+
+1. Why can one visible symbol occupy two `char` values?
+2. When does numeric promotion change a result?
+3. Why is `StringBuilder` preferable in a loop?
+
+Hints: first name the governing contract; then construct the smallest counterexample; finally
+write the invariant or pseudocode before reaching for an API. Run the checks after each step.
+
+Reference feedback: [`Solution.java`](Solution.java)

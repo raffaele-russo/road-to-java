@@ -1,5 +1,14 @@
 # 03 — Collections & Generics
 
+## Learning outcome and prerequisite
+
+**Outcome:** Choose collection contracts and design type-safe generic producer/consumer APIs.
+
+Follow the repository [learning contract](../LEARNING-CONTRACT.md): form a mental model,
+run and change the demonstrations, explain the failure modes, complete the exercise without
+the solution open, and answer retrieval questions aloud. Prerequisite: complete the earlier
+modules in the same roadmap track unless this module states otherwise.
+
 ## The Collections Framework map
 
 ```
@@ -219,3 +228,14 @@ java -ea 03-collections-generics/Exercise.java
 java 03-collections-generics/Collections.java
 java 03-collections-generics/Generics.java
 ```
+
+## Retrieval practice, hints, and solution
+
+1. Which contract—not implementation name—does the caller need?
+2. Derive PECS for a copy operation.
+3. Which mutations invalidate a hash-based lookup?
+
+Hints: first name the governing contract; then construct the smallest counterexample; finally
+write the invariant or pseudocode before reaching for an API. Run the checks after each step.
+
+Reference feedback: [`Solution.java`](Solution.java)

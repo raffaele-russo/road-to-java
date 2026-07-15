@@ -1,5 +1,14 @@
 # 02 — OOP: classes, interfaces, inheritance
 
+## Learning outcome and prerequisite
+
+**Outcome:** Design classes with explicit identity, equality, initialization, mutability, and inheritance contracts.
+
+Follow the repository [learning contract](../LEARNING-CONTRACT.md): form a mental model,
+run and change the demonstrations, explain the failure modes, complete the exercise without
+the solution open, and answer retrieval questions aloud. Prerequisite: complete the earlier
+modules in the same roadmap track unless this module states otherwise.
+
 ## Classes
 
 - One `public` top-level class per file; file name must match.
@@ -269,3 +278,14 @@ java -ea 02-oop/Exercise.java
 ```bash
 java 02-oop/Oop.java
 ```
+
+## Retrieval practice, hints, and solution
+
+1. When should equality use value rather than identity?
+2. What does `final` guarantee for a mutable field value?
+3. Why can calling overridable methods in constructors fail?
+
+Hints: first name the governing contract; then construct the smallest counterexample; finally
+write the invariant or pseudocode before reaching for an API. Run the checks after each step.
+
+Reference feedback: [`Solution.java`](Solution.java)

@@ -1,5 +1,14 @@
 # 09 — Interview Q&A (rapid fire)
 
+## Learning outcome and prerequisite
+
+**Outcome:** Retrieve Java mental models and communicate contracts, evidence, and tradeoffs precisely.
+
+Follow the repository [learning contract](../LEARNING-CONTRACT.md): form a mental model,
+run and change the demonstrations, explain the failure modes, complete the exercise without
+the solution open, and answer retrieval questions aloud. Prerequisite: complete the earlier
+modules in the same roadmap track unless this module states otherwise.
+
 Answers kept short and quotable, with a small example under each one to make the
 concept concrete. If you can say the bold line fluently *and* reconstruct the
 example, you're in good shape.
@@ -1121,3 +1130,13 @@ module. If you can't reconstruct the example, you don't know it yet — just the
     problem, not a testing problem? (module 12)
 17. Why does constructor injection make a class testable *without* starting a Spring
     context at all? (module 13)
+18. Why does Java 25 `synchronized` code no longer have the broad virtual-thread pinning
+    warning from early Java-21 material, and which pinning cases remain? (module 06)
+19. When is a scoped value safer than a `ThreadLocal`, and when is an explicit parameter
+    clearer than either? (module 06/08)
+20. A client times out after `POST /orders`: why is the outcome unknown and how does an
+    idempotency record make the retry safe? (module 20/22)
+21. How do an optimistic-lock version and an idempotency key solve different races? (module 17/20)
+22. Why does a transactional outbox tolerate broker failure without making publication
+    exactly-once, and what makes the consumer effect idempotent? (module 20/22)
+23. Which evidence would you collect before changing GC flags for rising p99 latency? (module 21)

@@ -1,5 +1,14 @@
 # 04 — Exceptions & I/O
 
+## Learning outcome and prerequisite
+
+**Outcome:** Design exception boundaries and guarantee deterministic resource cleanup.
+
+Follow the repository [learning contract](../LEARNING-CONTRACT.md): form a mental model,
+run and change the demonstrations, explain the failure modes, complete the exercise without
+the solution open, and answer retrieval questions aloud. Prerequisite: complete the earlier
+modules in the same roadmap track unless this module states otherwise.
+
 ## The exception hierarchy
 
 ```
@@ -188,3 +197,14 @@ java -ea 04-exceptions-io/Exercise.java
 ```bash
 java 04-exceptions-io/Exceptions.java
 ```
+
+## Retrieval practice, hints, and solution
+
+1. Where should a checked failure be translated?
+2. Which exception wins when body and close both fail?
+3. What resource lifetime does a lazy file stream require?
+
+Hints: first name the governing contract; then construct the smallest counterexample; finally
+write the invariant or pseudocode before reaching for an API. Run the checks after each step.
+
+Reference feedback: [`Solution.java`](Solution.java)

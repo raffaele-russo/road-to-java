@@ -7,14 +7,13 @@ public class Solution {
     /** Case-insensitive palindrome check, ignoring anything that's not a letter/digit.
      *  isPalindrome("A man, a plan, a canal: Panama") -> true */
     static boolean isPalindrome(String s) {
-        int r = s.length() - 1;
-        int l = 0;
-        while (l < r){
-            if (s.charAt(l) != s.charAt(r)){
-                return false;
-            } 
-            l++;
-            r--;
+        int left = 0, right = s.length() - 1;
+        while (left < right) {
+            while (left < right && !Character.isLetterOrDigit(s.charAt(left))) left++;
+            while (left < right && !Character.isLetterOrDigit(s.charAt(right))) right--;
+            if (Character.toLowerCase(s.charAt(left)) != Character.toLowerCase(s.charAt(right))) return false;
+            left++;
+            right--;
         }
         return true;
     }
@@ -23,11 +22,13 @@ public class Solution {
      *  in the input to worry about.
      *  reverseWords("the sky is blue") -> "blue is sky the" */
     static String reverseWords(String s) {
-        StringBuilder r = new StringBuilder();
-        for (int i = s.length() - 1; i>=0; i--){
-            r.append(s.charAt(i));
+        String[] words = s.split(" ");
+        StringBuilder result = new StringBuilder();
+        for (int i = words.length - 1; i >= 0; i--) {
+            if (!result.isEmpty()) result.append(' ');
+            result.append(words[i]);
         }
-        return r.toString();
+        return result.toString();
     }
 
     /** Sum of decimal digits of n. Handle negative n by summing the digits of |n|.
@@ -48,6 +49,7 @@ public class Solution {
      *  runLengthEncode("aaabbc") -> "a3b2c1"
      *  runLengthEncode("abc") -> "a1b1c1" */
     static String runLengthEncode(String s) {
+        if (s.isEmpty()) return "";
         StringBuilder out = new StringBuilder();
         int cnt = 1;
         int n = s.length();

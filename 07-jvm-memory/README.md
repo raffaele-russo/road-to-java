@@ -1,5 +1,14 @@
 # 07 — JVM & Memory Management
 
+## Learning outcome and prerequisite
+
+**Outcome:** Relate runtime memory, GC, class loading, and JIT behavior to diagnostic evidence.
+
+Follow the repository [learning contract](../LEARNING-CONTRACT.md): form a mental model,
+run and change the demonstrations, explain the failure modes, complete the exercise without
+the solution open, and answer retrieval questions aloud. Prerequisite: complete the earlier
+modules in the same roadmap track unless this module states otherwise.
+
 Where a C++ dev's instincts are most different. You don't manage memory, but you must
 understand what the JVM does so you can reason about performance and leaks.
 
@@ -149,3 +158,14 @@ java -ea 07-jvm-memory/Exercise.java
 java 07-jvm-memory/JvmInfo.java
 java -XX:+PrintFlagsFinal -version | grep -i gc   # see GC flags
 ```
+
+## Retrieval practice, hints, and solution
+
+1. Which evidence separates a leak from a high allocation rate?
+2. Why may equal identity-hash values still denote distinct objects?
+3. What triggers class initialization?
+
+Hints: first name the governing contract; then construct the smallest counterexample; finally
+write the invariant or pseudocode before reaching for an API. Run the checks after each step.
+
+Reference feedback: [`Solution.java`](Solution.java)

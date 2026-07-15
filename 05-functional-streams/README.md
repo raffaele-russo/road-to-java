@@ -1,5 +1,14 @@
 # 05 — Functional programming & the Stream API
 
+## Learning outcome and prerequisite
+
+**Outcome:** Explain stream laziness and build readable, bounded pipelines and collectors.
+
+Follow the repository [learning contract](../LEARNING-CONTRACT.md): form a mental model,
+run and change the demonstrations, explain the failure modes, complete the exercise without
+the solution open, and answer retrieval questions aloud. Prerequisite: complete the earlier
+modules in the same roadmap track unless this module states otherwise.
+
 The single biggest "modern Java" area interviewers probe. If you know C++ lambdas and
 `<algorithm>` / ranges, this will feel familiar but more fluent.
 
@@ -178,3 +187,14 @@ java -ea 05-functional-streams/Exercise.java
 ```bash
 java 05-functional-streams/Streams.java
 ```
+
+## Retrieval practice, hints, and solution
+
+1. Which operations are lazy and when does work begin?
+2. Why can side effects make a parallel stream incorrect?
+3. When is a loop clearer than a collector?
+
+Hints: first name the governing contract; then construct the smallest counterexample; finally
+write the invariant or pseudocode before reaching for an API. Run the checks after each step.
+
+Reference feedback: [`Solution.java`](Solution.java)

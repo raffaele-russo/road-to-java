@@ -1,5 +1,14 @@
 # 11 — Design Patterns
 
+## Learning outcome and prerequisite
+
+**Outcome:** Recognize design patterns and choose composition or Java language features without over-engineering.
+
+Follow the repository [learning contract](../LEARNING-CONTRACT.md): form a mental model,
+run and change the demonstrations, explain the failure modes, complete the exercise without
+the solution open, and answer retrieval questions aloud. Prerequisite: complete the earlier
+modules in the same roadmap track unless this module states otherwise.
+
 GoF patterns are still a staple of Java interviews — partly because Java's constraints
 (no multiple class inheritance, no default/named args, no operator overloading, no
 free functions) are exactly what push idiomatic code toward these patterns in the
@@ -205,3 +214,14 @@ java 11-design-patterns/TemplateMethod.java
 java 11-design-patterns/Iterator.java
 java 11-design-patterns/ChainOfResponsibility.java
 ```
+
+## Retrieval practice, hints, and solution
+
+1. Which pattern can a lambda replace?
+2. When does an adapter differ from a decorator?
+3. What evidence justifies adding a pattern?
+
+Hints: first name the governing contract; then construct the smallest counterexample; finally
+write the invariant or pseudocode before reaching for an API. Run the checks after each step.
+
+Reference feedback: [`Solution.java`](Solution.java)

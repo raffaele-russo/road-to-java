@@ -1,5 +1,14 @@
 # 00 — C++ vs Java: the mental-model shift
 
+## Learning outcome and prerequisite
+
+**Outcome:** Predict Java reference, lifetime, parameter-passing, and compilation behavior before writing code.
+
+Follow the repository [learning contract](../LEARNING-CONTRACT.md): form a mental model,
+run and change the demonstrations, explain the failure modes, complete the exercise without
+the solution open, and answer retrieval questions aloud. Prerequisite: complete the earlier
+modules in the same roadmap track unless this module states otherwise.
+
 Read this before anything else. Java's syntax looks like C++, which is a trap: the
 *semantics* underneath are different.
 
@@ -136,3 +145,14 @@ If you get stuck, the mental-model table above has every fix.
 ```bash
 java 00-cpp-vs-java/HelloComparison.java
 ```
+
+## Retrieval practice, hints, and solution
+
+1. Why is Java pass-by-value even for objects?
+2. When is deterministic cleanup still required with GC?
+3. Which C++ value assumptions fail for Java references?
+
+Hints: first name the governing contract; then construct the smallest counterexample; finally
+write the invariant or pseudocode before reaching for an API. Run the checks after each step.
+
+Reference feedback: [`Solution.java`](Solution.java)

@@ -1,6 +1,16 @@
-# 08 — Modern Java (11 → 21)
+# 08 — Modern Java (11 → 25)
 
-Features that show you're current, not stuck on Java 8. All available in Java 21 LTS.
+## Learning outcome and prerequisite
+
+**Outcome:** Model immutable data and closed alternatives with records, sealed types, and exhaustive patterns.
+
+Follow the repository [learning contract](../LEARNING-CONTRACT.md): form a mental model,
+run and change the demonstrations, explain the failure modes, complete the exercise without
+the solution open, and answer retrieval questions aloud. Prerequisite: complete the earlier
+modules in the same roadmap track unless this module states otherwise.
+
+Features that show you're current, not stuck on Java 8. The baseline examples remain
+Java-21-compatible where practical; the final section covers additions through Java 25 LTS.
 
 ## `var` — local type inference (Java 10)
 ```java
@@ -143,6 +153,31 @@ String html = """
 - Helpful NullPointerExceptions (Java 14) — messages name the exact null variable.
 - Virtual threads (Java 21, module 06).
 
+## Java 22–25 additions worth knowing
+
+Java 25 finalized several features introduced after 21:
+
+- **Unnamed variables and patterns** (22): `_` states that a binding is intentionally unused.
+- **Scoped values** (25): bounded, immutable context inherited by callees/child threads; prefer
+  explicit parameters normally, and use scoped values instead of mutable `ThreadLocal` context
+  when framework-style call chains require implicit context.
+- **Module import declarations** (25): `import module ...` imports exported packages for concise
+  educational/small source files; normal production code often favors explicit imports.
+- **Compact source files and instance main methods** (25): remove ceremony for first programs;
+  this repository retains named classes so examples also teach conventional project structure.
+- **Flexible constructor bodies** (25): statements may validate/prepare values before an explicit
+  `super(...)`/`this(...)`, but cannot access the under-construction instance early.
+
+Structured concurrency and primitive patterns are still preview features in Java 25 and are
+therefore explained but not required by exercises. Preview APIs require `--enable-preview` and
+may change; do not quietly make production compatibility depend on them.
+
+Authoritative inventory: [OpenJDK JDK 25 features](https://openjdk.org/projects/jdk/25/).
+
+**17/21 compatibility:** replace scoped values with carefully cleaned-up `ThreadLocal` or explicit
+parameters; use explicit imports, conventional `static main`, and validate arguments before
+constructor invocation at a factory/caller boundary.
+
 ## Practice exercise — from scratch
 
 Open [`Exercise.java`](Exercise.java). A legacy `instanceof`-chain style `Expr` evaluator
@@ -166,3 +201,14 @@ java -ea 08-modern-java/Exercise.java
 ```bash
 java 08-modern-java/Modern.java
 ```
+
+## Retrieval practice, hints, and solution
+
+1. When is a record not deeply immutable?
+2. How does sealing make a switch safer?
+3. Which feature needs a Java 17/21 fallback?
+
+Hints: first name the governing contract; then construct the smallest counterexample; finally
+write the invariant or pseudocode before reaching for an API. Run the checks after each step.
+
+Reference feedback: [`Solution.java`](Solution.java)

@@ -1,5 +1,14 @@
 # 06 — Concurrency
 
+## Learning outcome and prerequisite
+
+**Outcome:** Prove visibility and atomicity with happens-before and implement cooperative cancellation.
+
+Follow the repository [learning contract](../LEARNING-CONTRACT.md): form a mental model,
+run and change the demonstrations, explain the failure modes, complete the exercise without
+the solution open, and answer retrieval questions aloud. Prerequisite: complete the earlier
+modules in the same roadmap track unless this module states otherwise.
+
 Java has a mature, standardized concurrency model (unlike C++ where it arrived late).
 Interviewers love this area — know the memory model, not just the APIs.
 
@@ -87,6 +96,45 @@ try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
     for (int i = 0; i < 10_000; i++) executor.submit(() -> handle());
 }
 ```
+
+Virtual threads improve **throughput for blocking I/O**, not CPU speed. Do not pool them to limit
+concurrency; use a semaphore or bounded resource pool for the scarce dependency. They carry the
+same data-race rules as platform threads. Since Java 24, blocking inside `synchronized` no longer
+causes the broad carrier-thread pinning limitation taught by early Java-21 material; remaining
+native/class-initialization pinning can be inspected with JFR. See
+[JEP 491](https://openjdk.org/jeps/491).
+
+## Cancellation and interruption
+
+Cancellation is cooperative. `interrupt()` requests that a thread stop waiting/work; it does not
+safely kill the thread. Blocking JDK operations commonly throw `InterruptedException`. Either let
+it propagate or restore the flag when translating it:
+
+```java
+try {
+    queue.take();
+} catch (InterruptedException cancelled) {
+    Thread.currentThread().interrupt();
+    return;                         // unwind and release resources
+}
+```
+
+Loops performing CPU work must periodically check `Thread.currentThread().isInterrupted()`.
+Cancellation must flow downward to child tasks, and the caller must still join/close their scope.
+Never swallow interruption and continue as if work completed.
+
+## Scoped values and structured concurrency (Java 25)
+
+Scoped values are final in Java 25: they share immutable, lexically bounded context with callees
+and child threads and avoid the mutability/lifetime leaks of pooled-thread `ThreadLocal`. Prefer
+ordinary parameters unless context must cross framework callbacks. See
+[JEP 506](https://openjdk.org/jeps/506).
+
+Structured concurrency treats related forked tasks as one lifetime: success waits for required
+children; failure cancels siblings; leaving the scope joins/cancels remaining work. In Java 25 it
+is still a preview API ([JEP 505](https://openjdk.org/jeps/505)), so this repository teaches the
+model but does not require preview flags. `CompletableFuture` remains useful for externally owned
+pipelines; a structured scope is easier to reason about for request-owned fan-out.
 
 ## Thread lifecycle states
 
@@ -184,3 +232,14 @@ java -ea 06-concurrency/Exercise.java
 ```bash
 java 06-concurrency/Concurrency.java
 ```
+
+## Retrieval practice, hints, and solution
+
+1. Name the happens-before edge that makes a value visible.
+2. Why does interruption require cooperation?
+3. When do virtual threads help and when do they not?
+
+Hints: first name the governing contract; then construct the smallest counterexample; finally
+write the invariant or pseudocode before reaching for an API. Run the checks after each step.
+
+Reference feedback: [`Solution.java`](Solution.java)

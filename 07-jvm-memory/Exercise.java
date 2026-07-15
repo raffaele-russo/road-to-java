@@ -23,7 +23,8 @@ public class Exercise {
     record Point(int x, int y) {}
 
     /** TODO: return {a, b, c} where:
-     *  a = true iff two equal-but-distinct Points have DIFFERENT System.identityHashCode()
+     *  a = true iff two equal-but-distinct Points have DIFFERENT identities (`a != b`).
+     *      Do not compare identityHashCode values: collisions are permitted.
      *  b = true iff those same two Points have EQUAL .hashCode() (value-based, from record)
      *  c = true iff calling System.identityHashCode() twice on the SAME reference is stable
      *      (returns the same value both times) */
@@ -46,7 +47,7 @@ public class Exercise {
         assert Lazy.initCount == 1 : "static initializer must not re-run on subsequent use";
 
         boolean[] result = identityVsEquality();
-        assert result[0] : "distinct objects should have different identity hash codes";
+        assert result[0] : "separately-created records should have distinct identities";
         assert result[1] : "records should have equal hashCode() for equal field values";
         assert result[2] : "identityHashCode of the same reference must be stable";
 
