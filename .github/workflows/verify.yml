@@ -1,0 +1,37 @@
+name: verify
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  curriculum:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Verify local documentation links
+        run: ./scripts/check-docs.sh
+      - name: Verify external documentation links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --exclude-path target '**/*.md'
+      - name: Verify solved JDK examples
+        run: ./scripts/verify-jdk-examples.sh
+      - name: Compile, test, and package
+        run: ./mvnw --batch-mode verify
+      - name: Start capstone dependencies
+        run: docker compose -f 22-order-service/compose.yaml up -d --wait
+      - name: Start capstone and smoke-test readiness
+        run: |
+          ./mvnw -pl 22-order-service spring-boot:start
+          curl --fail --retry 20 --retry-delay 2 http://localhost:8080/actuator/health/readiness
+      - name: Stop capstone
+        if: always()
+        run: |
+          ./mvnw -pl 22-order-service spring-boot:stop || true
+          docker compose -f 22-order-service/compose.yaml down -v
