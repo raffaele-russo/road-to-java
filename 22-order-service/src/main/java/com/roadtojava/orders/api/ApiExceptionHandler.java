@@ -12,6 +12,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -29,6 +30,13 @@ public class ApiExceptionHandler {
     @ExceptionHandler({IllegalArgumentException.class})
     ProblemDetail badRequest(RuntimeException error, HttpServletRequest request) {
         return problem(HttpStatus.BAD_REQUEST, "Invalid request", error, request);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    ProblemDetail malformedParameter(MethodArgumentTypeMismatchException error,
+                                     HttpServletRequest request) {
+        return problem(HttpStatus.BAD_REQUEST, "Invalid request",
+            new IllegalArgumentException("Path or query parameter has an invalid value"), request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

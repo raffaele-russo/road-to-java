@@ -10,6 +10,7 @@ import com.roadtojava.orders.application.OrderApplicationService;
 import com.roadtojava.orders.domain.Money;
 import com.roadtojava.orders.domain.Order;
 import com.roadtojava.orders.domain.OrderItem;
+import com.roadtojava.orders.domain.OrderNotFoundException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -51,5 +52,24 @@ class OrderControllerTest {
     @Test void rejectsTokenWithoutReadScope() throws Exception {
         mvc.perform(get("/api/orders/{id}", UUID.randomUUID()).with(jwt()))
             .andExpect(status().isForbidden());
+    }
+
+    @Test void mapsMissingOrderToStableProblemResponse() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(service.get("customer-1", false, id)).thenThrow(new OrderNotFoundException(id));
+        mvc.perform(get("/api/orders/{id}", id).with(jwt().jwt(token -> token.subject("customer-1"))
+                .authorities(new SimpleGrantedAuthority("SCOPE_orders:read"))))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.title").value("Order not found"))
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.instance").value("/api/orders/" + id));
+    }
+
+    @Test void rejectsMalformedPathIdentifierAtTheHttpBoundary() throws Exception {
+        mvc.perform(get("/api/orders/not-a-uuid").with(jwt().jwt(token -> token.subject("customer-1"))
+                .authorities(new SimpleGrantedAuthority("SCOPE_orders:read"))))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.title").value("Invalid request"))
+            .andExpect(jsonPath("$.detail").value("Path or query parameter has an invalid value"));
     }
 }
