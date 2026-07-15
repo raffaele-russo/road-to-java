@@ -32,6 +32,8 @@ Modules 00–11 remain single-file programs so that syntax never hides behind bu
 configuration. Dependency-based modules use Maven. Every learning module follows
 [the learning contract](LEARNING-CONTRACT.md): outcomes, mental model, examples, failure
 modes, choices, production implications, retrieval practice, exercise, hints, and solution.
+The [curriculum map](CURRICULUM-MAP.md) is the completeness ledger connecting each required
+competency to theory, runnable evidence, learner practice, automated proof, and assessment.
 
 ## Track 1 — Core Java
 

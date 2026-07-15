@@ -1,9 +1,7 @@
 import java.util.List;
 import java.util.Objects;
 
-// Practice: implement Circle and Rectangle below (marked TODO). Shape and Describable
-// are already complete — don't change them. Run once you think you're done:
-//   java -ea 02-oop/Solution.java
+// Reference solution for Exercise.java. Run with: java -ea 02-oop/Solution.java
 public class Solution {
 
     interface Describable {
@@ -14,37 +12,27 @@ public class Solution {
     abstract static class Shape {
         abstract double area();
 
-        /** TODO: sum the area() of every shape in the list. Use a plain loop or a stream —
-         *  either is fine, this file doesn't require streams (module 05). */
+        /** Sum by polymorphic dispatch; no type switch is needed. */
         static double totalArea(List<Shape> shapes) {
             double sum = 0;
-            for (Shape s : shapes){
+            for (Shape s : shapes) {
                 sum += s.area();
             }
             return sum;
         }
     }
 
-    /** TODO: implement Circle.
-     *  - extends Shape, implements Describable
-     *  - one field: final double radius
-     *  - area() = pi * r^2
-     *  - describe() returns "Circle(r=<radius>)"
-     *  - equals()/hashCode(): two Circles are equal iff same radius (and both are Circles —
-     *    a Circle must never equal a Rectangle, even with the same area)
-     *  - toString() returns describe()
-     */
+    /** Immutable value object whose equality is based on radius. */
     static class Circle extends Shape implements Describable {
-        // TODO: fields, constructor, area(), describe(), equals(), hashCode(), toString()
-        public double radius;
+        private final double radius;
 
-        public Circle(double radius) {this.radius = radius;}
-
-        @Override
-        double area(){return Math.pow(radius,2) * Math.PI;}
+        Circle(double radius) { this.radius = radius; }
 
         @Override
-        public String describe(){return  "Circle(r="+radius+")";} 
+        double area() { return radius * radius * Math.PI; }
+
+        @Override
+        public String describe() { return "Circle(r=" + radius + ")"; }
 
         @Override
         public int hashCode() {
@@ -53,9 +41,8 @@ public class Solution {
 
         @Override
         public boolean equals(Object obj) {
-            if(obj == this) return true;
-            if (!(obj instanceof Circle c)){return false;}
-            return c.radius == radius;
+            if (obj == this) return true;
+            return obj instanceof Circle c && Double.compare(c.radius, radius) == 0;
         }
 
         @Override
@@ -65,34 +52,30 @@ public class Solution {
     
     }
 
-    /** TODO: implement Rectangle.
-     *  - extends Shape, implements Describable
-     *  - two fields: final double width, height
-     *  - area() = width * height
-     *  - describe() returns "Rectangle(w=<width>, h=<height>)"
-     *  - equals()/hashCode(): two Rectangles are equal iff same width AND height
-     *  - toString() returns describe()
-     */
+    /** Immutable value object whose equality is based on both dimensions. */
     static class Rectangle extends Shape implements Describable {
-        // TODO: fields, constructor, area(), describe(), equals(), hashCode(), toString()
-        public double width, height;
-        public Rectangle(double w, double h){width = w; height = h;};
-        public double area(){return width * height;}
+        private final double width;
+        private final double height;
+
+        Rectangle(double width, double height) { this.width = width; this.height = height; }
+
+        double area() { return width * height; }
         @Override
         public String describe(){
-            return "Rectangle(w="+width+", h="+height+")";
+            return "Rectangle(w=" + width + ", h=" + height + ")";
         }
 
-         @Override
+        @Override
         public int hashCode() {
-            return Objects.hash(width,height);
+            return Objects.hash(width, height);
         }
 
         @Override
         public boolean equals(Object obj) {
-            if(obj == this) return true;
-            if (!(obj instanceof Rectangle r)){return false;}
-            return r.width == width && r.height == height;
+            if (obj == this) return true;
+            return obj instanceof Rectangle r
+                    && Double.compare(r.width, width) == 0
+                    && Double.compare(r.height, height) == 0;
         }
 
         @Override

@@ -65,6 +65,9 @@ void withdrawMoreThanBalanceThrows() {
 
 ## Mockito essentials — see `NotificationServiceTest.java`
 
+The build starts Mockito's instrumentation agent explicitly. Current JDKs warn that dynamic
+self-attachment will be disabled; a test suite should not depend on that hidden runtime mutation.
+
 Testing a class **in isolation** means faking its collaborators. That's what Mockito is for.
 
 | Concept | Code |

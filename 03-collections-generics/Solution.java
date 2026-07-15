@@ -3,11 +3,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// Practice: implement MultiMap and LruCache below. Run once you think you're done:
-//   java -ea 03-collections-generics/Exercise.java
-public class Exercise {
+// Reference solution for Exercise.java. Run with:
+//   java -ea 03-collections-generics/Solution.java
+public class Solution {
 
-    /** TODO: a generic multimap — one key maps to a growable list of values.
+    /** A generic multimap: one key maps to a growable list of values.
      *  Wrap a Map<K, List<V>> internally. put() should create the list on first use
      *  (computeIfAbsent, no manual "if absent, create" branching). get() on a missing
      *  key should return an empty (not null) list. */
@@ -28,7 +28,7 @@ public class Exercise {
         }
     }
 
-    /** TODO: a fixed-capacity LRU cache. Extend LinkedHashMap with access-order = true
+    /** A fixed-capacity LRU cache using LinkedHashMap access order.
      *  (the 3-arg constructor), and override removeEldestEntry to evict once size()
      *  exceeds capacity. Do not implement your own linked-list eviction logic. */
     static class LruCache<K, V> extends LinkedHashMap<K, V> {
@@ -40,8 +40,7 @@ public class Exercise {
             this.capacity = capacity;
         }
 
-        // TODO: override removeEldestEntry(Map.Entry<K, V> eldest)
-        @Override 
+        @Override
         protected boolean removeEldestEntry(Map.Entry<K, V> eldest){
             return size() > capacity;
         }

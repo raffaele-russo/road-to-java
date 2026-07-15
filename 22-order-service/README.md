@@ -9,6 +9,14 @@ observability, containers, and integration testing in one modular monolith.
 Complete modules 00–21. You should be able to trace a request, state the invariant at every
 boundary, induce each documented failure, and identify the evidence that proves recovery.
 
+## Mental model and C++ bridge
+
+Treat the service as one durable state machine with protocol, transaction, domain, and delivery
+boundaries. A successful Java method return is insufficient evidence: the HTTP response may be
+lost, the database may reject commit, or event publication may repeat. The transferable C++ habit
+is explicit invariants and ownership; the new habit is reasoning across independently failing
+process and network boundaries.
+
 ## Architecture
 
 ```text
@@ -94,3 +102,20 @@ Hint 1: locate the invariant owner before changing a controller. Hint 2: locate 
 before adding a remote call. Hint 3: enumerate crash points before claiming reliable delivery.
 The checked-in implementation is the reference solution; improve it only with a failing test or
 an operational requirement that demonstrates the need.
+
+## Retrieval practice and failure injection
+
+Before reading code, predict the durable state and client-visible response for each boundary:
+
+1. validation fails before a transaction starts;
+2. the same idempotency key repeats with equal and unequal commands;
+3. two transactions confirm the same version;
+4. PostgreSQL commits while the broker is unavailable;
+5. the publisher sends and crashes before marking the row;
+6. the consumer receives one event twice;
+7. a valid token names another customer's order;
+8. SIGTERM arrives while work is in flight.
+
+For every answer name the invariant, transaction or protocol boundary, expected log/metric/test,
+recovery behavior, and one tradeoff. The milestone commands are the applied exercise; the checked-in
+implementation and tests are the reference solution.

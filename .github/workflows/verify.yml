@@ -15,7 +15,9 @@ jobs:
           java-version: '25'
           cache: maven
       - name: Verify local documentation links
-        run: ./scripts/check-docs.sh
+        run: |
+          ./scripts/check-docs.sh
+          ./scripts/check-curriculum.sh
       - name: Verify external documentation links
         uses: lycheeverse/lychee-action@v2
         with:
@@ -35,3 +37,18 @@ jobs:
         run: |
           ./mvnw -pl 22-order-service spring-boot:stop || true
           docker compose -f 22-order-service/compose.yaml down -v
+
+  java-26-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '26'
+          cache: maven
+      - name: Verify Java 25 artifacts on the next feature release
+        run: |
+          ./scripts/check-curriculum.sh
+          ./scripts/verify-jdk-examples.sh
+          ./mvnw --batch-mode -DskipTests package
