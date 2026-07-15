@@ -1,5 +1,14 @@
 # 13 — Spring Basics (DI/IoC)
 
+## Learning outcome and prerequisite
+
+**Outcome:** Explain and test dependency injection, bean selection, scopes, lifecycle, and proxy boundaries.
+
+Follow the repository [learning contract](../LEARNING-CONTRACT.md): form a mental model,
+run and change the demonstrations, explain the failure modes, complete the exercise without
+the solution open, and answer retrieval questions aloud. Prerequisite: complete the earlier
+modules in the same roadmap track unless this module states otherwise.
+
 "Java interview" and "Spring" are practically synonymous in most backend job markets.
 This module is a **real, runnable** Spring (core `spring-context`, not full Boot)
 project — not just theory — so you can see dependency injection actually happen.
@@ -192,18 +201,20 @@ plain-unit-testability:
 1. `PricingStrategy` interface with `double price(double base)` — already given.
 2. `StandardPricingStrategy` (`@Component @Primary`, returns `base` unchanged) — already
    given.
-3. TODO: `DiscountPricingStrategy` — `@Component` with `@Qualifier("discount")`,
+3. Reconstruct `DiscountPricingStrategy` — `@Component` with `@Qualifier("discount")`,
    returns `base * 0.9`.
-4. TODO: `CheckoutService` — `@Component`, constructor-injects the `"discount"`-qualified
+4. Reconstruct `CheckoutService` — `@Component`, constructor-injects the `"discount"`-qualified
    `PricingStrategy` (not the `@Primary` one — this is the whole point of the exercise),
    with a `total(double base)` method delegating to it.
-5. TODO: fill in [`CheckoutServiceTest.java`](src/test/java/com/roadtojava/spring/CheckoutServiceTest.java)
+5. Fill in [`CheckoutServiceExerciseTest.java`](src/exercise/java/com/roadtojava/spring/CheckoutServiceExerciseTest.java).
+   The main sources and `CheckoutServiceSolutionTest` are the reference solution; copy the
+   module to a scratch branch or hide them before reconstructing the wiring.
    — one plain unit test (`new CheckoutService(new DiscountPricingStrategy())`, **no**
    Spring container) and one Spring-context test (boot `AppConfig`, get the bean, prove
    the `@Qualifier` — not the `@Primary` — strategy was actually wired in).
 
 ```bash
-cd 13-spring-basics && mvn test
+cd 13-spring-basics && mvn -Pexercise test
 ```
 
 ## Run
@@ -212,3 +223,14 @@ cd 13-spring-basics && mvn test
 mvn test
 mvn compile exec:java
 ```
+
+## Retrieval practice, hints, and solution
+
+1. Why does constructor injection enable a plain unit test?
+2. Which calls cross a Spring proxy boundary?
+3. How do scope and lifecycle differ?
+
+Hints: first name the governing contract; then construct the smallest counterexample; finally
+write the invariant or pseudocode before reaching for an API. Run the checks after each step.
+
+Reference feedback: Solved examples run by default; use `mvn -Pexercise test` for the learner test.

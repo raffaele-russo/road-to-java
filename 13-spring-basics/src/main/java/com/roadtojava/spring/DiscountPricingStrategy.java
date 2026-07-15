@@ -1,11 +1,13 @@
 package com.roadtojava.spring;
 
-// TODO: add @Component and @Qualifier("discount") (see SmsMessageService.java for the
-// same pattern already used elsewhere in this module).
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
+@Component
+@Qualifier("discount")
 public class DiscountPricingStrategy implements PricingStrategy {
     @Override
     public double price(double base) {
-        // TODO: return a 10% discount off base
-        throw new UnsupportedOperationException("TODO");
+        return base * 0.9;
     }
 }

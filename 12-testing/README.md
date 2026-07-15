@@ -1,5 +1,14 @@
 # 12 — Testing: JUnit 5 & Mockito
 
+## Learning outcome and prerequisite
+
+**Outcome:** Design deterministic unit, integration, boundary, and production-confidence tests.
+
+Follow the repository [learning contract](../LEARNING-CONTRACT.md): form a mental model,
+run and change the demonstrations, explain the failure modes, complete the exercise without
+the solution open, and answer retrieval questions aloud. Prerequisite: complete the earlier
+modules in the same roadmap track unless this module states otherwise.
+
 Unlike modules 00–11, this module needs a **build tool** (Maven) because JUnit and
 Mockito aren't part of the JDK — this mirrors how testing actually works day-to-day in
 a Java job, and is worth knowing cold for interviews ("how do you test a class with a
@@ -129,6 +138,23 @@ class ExpensiveSetupTest {
 A healthy suite is mostly unit tests with a thinner layer of integration tests on top
 (the "test pyramid") — not the other way around.
 
+## The executable testing pyramid
+
+This module now demonstrates three boundary sizes:
+
+| Test | Tool | What it proves |
+|---|---|---|
+| `BankAccountTest` / `NotificationServiceTest` | JUnit + Mockito | isolated policy and collaboration |
+| `StatusClientTest` | WireMock | real HTTP serialization/status behavior without the internet |
+| `PostgresContractTest` | Testcontainers | behavior of a real PostgreSQL engine; skipped when Docker is unavailable |
+| module 22 controller tests | Spring MVC slice | routing, validation, security, and problem mapping |
+| module 22 application tests | Spring Boot + Testcontainers | migrations, transactions, filters, and adapters together |
+
+Test the smallest boundary that can prove the risk. Mock an owned collaborator in a unit test;
+do not mock PostgreSQL when the risk is PostgreSQL SQL/locking behavior. Inject `Clock`, IDs,
+executors, and HTTP endpoints so tests control nondeterminism. A concurrency test should use
+latches/barriers and eventual assertions, never “sleep and hope.”
+
 ## TDD in one paragraph
 
 Red (write a failing test for behavior that doesn't exist yet) → Green (write the
@@ -152,8 +178,9 @@ untested code paths, not as a quality target to chase for its own sake.
 
 `src/main/java/discount/DiscountCalculator.java` is a small, already-implemented class
 (loyalty-based discount pricing — a couple of branches and an exception). Open
-[`src/test/java/discount/DiscountCalculatorTest.java`](src/test/java/discount/DiscountCalculatorTest.java):
-every test method body currently calls `fail("TODO")`. Replace each with a real test:
+[`src/exercise/java/discount/DiscountCalculatorExerciseTest.java`](src/exercise/java/discount/DiscountCalculatorExerciseTest.java):
+every test method body currently calls `fail("TODO")`. Replace each with a real test. The
+solved test remains in `src/test/java` so the normal repository build stays green:
 
 1. `noDiscountUnderTwoYears` — loyalty `0` or `1` years → full price, no discount.
 2. `tenPercentDiscountForTwoToFourYears` — a `@ParameterizedTest` over `{2, 3, 4}`.
@@ -161,7 +188,7 @@ every test method body currently calls `fail("TODO")`. Replace each with a real 
 4. `nonPositivePriceThrows` — `assertThrows` for `price <= 0`.
 
 ```bash
-cd 12-testing && mvn test
+cd 12-testing && mvn -Pexercise test
 ```
 
 ## Run
@@ -169,3 +196,14 @@ cd 12-testing && mvn test
 ```bash
 mvn test
 ```
+
+## Retrieval practice, hints, and solution
+
+1. Which behavior belongs in a unit test versus an integration test?
+2. How does a fake differ from a mock?
+3. Why can high coverage still miss the contract?
+
+Hints: first name the governing contract; then construct the smallest counterexample; finally
+write the invariant or pseudocode before reaching for an API. Run the checks after each step.
+
+Reference feedback: Solved examples run by default; use `mvn -Pexercise test` for the learner test.
