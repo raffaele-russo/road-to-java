@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: order-service
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/orders}
+    username: ${DATABASE_USER:orders}
+    password: ${DATABASE_PASSWORD:orders-local-only}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:19092}
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+orders:
+  jwt:
+    # Development only. Production must inject a high-entropy secret or use issuer/JWK validation.
+    secret: ${JWT_SECRET:local-development-secret-at-least-32-bytes}
+  outbox:
+    enabled: ${OUTBOX_ENABLED:false}
+  consumer:
+    enabled: ${CONSUMER_ENABLED:false}
+server:
+  shutdown: graceful
+logging:
+  structured:
+    format:
+      console: logstash

@@ -1,0 +1,150 @@
+openapi: 3.1.0
+info:
+  title: Road to Java order service
+  version: 1.0.0
+  description: Capstone contract; JWT subject is the customer identity.
+servers:
+  - url: http://localhost:8080
+security:
+  - bearerAuth: []
+paths:
+  /api/orders:
+    post:
+      operationId: createOrder
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: {type: string, minLength: 1, maxLength: 100}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateOrder'}
+      responses:
+        '201':
+          description: Created, or the original result for an identical replay
+          headers:
+            Location: {schema: {type: string}}
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/Order'}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '409': {$ref: '#/components/responses/Conflict'}
+    get:
+      operationId: listOrders
+      parameters:
+        - {name: status, in: query, schema: {$ref: '#/components/schemas/OrderStatus'}}
+        - {name: page, in: query, schema: {type: integer, minimum: 0, default: 0}}
+        - {name: size, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 20}}
+      responses:
+        '200':
+          description: Stable page ordered by creation time then ID
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/OrderPage'}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+  /api/orders/{id}:
+    parameters:
+      - {$ref: '#/components/parameters/OrderId'}
+    get:
+      operationId: getOrder
+      responses:
+        '200':
+          description: Order owned by the caller, or any order for an administrator
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/Order'}}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/orders/{id}/confirm:
+    parameters:
+      - {$ref: '#/components/parameters/OrderId'}
+    post:
+      operationId: confirmOrder
+      responses:
+        '200': {description: Confirmed, content: {application/json: {schema: {$ref: '#/components/schemas/Order'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /api/orders/{id}/cancel:
+    parameters:
+      - {$ref: '#/components/parameters/OrderId'}
+    post:
+      operationId: cancelOrder
+      responses:
+        '200': {description: Cancelled, content: {application/json: {schema: {$ref: '#/components/schemas/Order'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  parameters:
+    OrderId: {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+  responses:
+    BadRequest:
+      description: Invalid syntax or validation failure
+      content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}
+    NotFound:
+      description: Order absent or intentionally hidden by access policy
+      content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}
+    Conflict:
+      description: Invalid transition, stale version, or idempotency-key misuse
+      content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}
+  schemas:
+    CreateOrder:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items: {$ref: '#/components/schemas/CreateItem'}
+    CreateItem:
+      type: object
+      required: [sku, quantity, unitPrice, currency]
+      properties:
+        sku: {type: string, minLength: 1}
+        quantity: {type: integer, minimum: 1}
+        unitPrice: {type: number, minimum: 0, multipleOf: 0.01}
+        currency: {type: string, pattern: '^[A-Z]{3}$'}
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount: {type: number, multipleOf: 0.01}
+        currency: {type: string, pattern: '^[A-Z]{3}$'}
+    OrderStatus: {type: string, enum: [PENDING, CONFIRMED, CANCELLED]}
+    Order:
+      type: object
+      required: [id, customerId, status, items, total, version, createdAt, updatedAt]
+      properties:
+        id: {type: string, format: uuid}
+        customerId: {type: string}
+        status: {$ref: '#/components/schemas/OrderStatus'}
+        items: {type: array, items: {$ref: '#/components/schemas/OrderItem'}}
+        total: {$ref: '#/components/schemas/Money'}
+        version: {type: integer, format: int64}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    OrderItem:
+      type: object
+      required: [sku, quantity, unitPrice, subtotal]
+      properties:
+        sku: {type: string}
+        quantity: {type: integer, minimum: 1}
+        unitPrice: {$ref: '#/components/schemas/Money'}
+        subtotal: {$ref: '#/components/schemas/Money'}
+    OrderPage:
+      type: object
+      required: [content, page, size, totalElements, totalPages]
+      properties:
+        content: {type: array, items: {$ref: '#/components/schemas/Order'}}
+        page: {type: integer}
+        size: {type: integer}
+        totalElements: {type: integer, format: int64}
+        totalPages: {type: integer}
+    Problem:
+      type: object
+      required: [type, title, status, detail, instance]
+      properties:
+        type: {type: string, format: uri}
+        title: {type: string}
+        status: {type: integer}
+        detail: {type: string}
+        instance: {type: string, format: uri}

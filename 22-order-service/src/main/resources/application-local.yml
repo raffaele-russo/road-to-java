@@ -1,0 +1,8 @@
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/local
+orders:
+  outbox:
+    enabled: true
+  consumer:
+    enabled: true

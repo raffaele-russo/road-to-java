@@ -1,0 +1,30 @@
+### Supply a locally-issued HS256 JWT with sub=customer-1 and scope="orders:read orders:write".
+@token = replace-me
+@orderId = replace-after-create
+
+POST http://localhost:8080/api/orders
+Authorization: Bearer {{token}}
+Idempotency-Key: tutorial-order-001
+Content-Type: application/json
+
+{
+  "items": [
+    {"sku": "JAVA-25", "quantity": 2, "unitPrice": 19.95, "currency": "EUR"}
+  ]
+}
+
+### Repeating the exact request/key returns the original order; changing the body is 409.
+GET http://localhost:8080/api/orders/{{orderId}}
+Authorization: Bearer {{token}}
+
+###
+GET http://localhost:8080/api/orders?status=PENDING&page=0&size=20
+Authorization: Bearer {{token}}
+
+###
+POST http://localhost:8080/api/orders/{{orderId}}/confirm
+Authorization: Bearer {{token}}
+
+### A second confirm is 409 application/problem+json.
+POST http://localhost:8080/api/orders/{{orderId}}/confirm
+Authorization: Bearer {{token}}
